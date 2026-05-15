@@ -16,71 +16,15 @@ end
 
 
 apply_window_rule({
-  name = "windowrule-001",
+  name = "tag-browser-web-clients",
   match = {
-    class = "^([Ff]irefox|org.mozilla.firefox|[Ff]irefox-esr|[Ff]irefox-bin)$",
+    class = "^([Ff]irefox|org.mozilla.firefox|[Ff]irefox-esr|[Ff]irefox-bin|[Gg]oogle-chrome(-beta|-dev|-unstable)?|chrome-.+-Default|[Cc]hromium|[Mm]icrosoft-edge(-stable|-beta|-dev|-unstable)|[Bb]rave-browser(-beta|-dev|-unstable)?|[Tt]horium-browser|[Cc]achy-browser|zen-alpha|zen)$",
   },
   tag = "+browser",
 })
 
 apply_window_rule({
-  name = "windowrule-002",
-  match = {
-    class = "^([Gg]oogle-chrome(-beta|-dev|-unstable)?)$",
-  },
-  tag = "+browser",
-})
-
-apply_window_rule({
-  name = "windowrule-003",
-  match = {
-    class = "^(chrome-.+-Default)$",
-  },
-  tag = "+browser",
-})
-
-apply_window_rule({
-  name = "windowrule-004",
-  match = {
-    class = "^([Cc]hromium)$",
-  },
-  tag = "+browser",
-})
-
-apply_window_rule({
-  name = "windowrule-005",
-  match = {
-    class = "^([Mm]icrosoft-edge(-stable|-beta|-dev|-unstable))$",
-  },
-  tag = "+browser",
-})
-
-apply_window_rule({
-  name = "windowrule-006",
-  match = {
-    class = "^([Bb]rave-browser(-beta|-dev|-unstable)?)$",
-  },
-  tag = "+browser",
-})
-
-apply_window_rule({
-  name = "windowrule-007",
-  match = {
-    class = "^([Tt]horium-browser|[Cc]achy-browser)$",
-  },
-  tag = "+browser",
-})
-
-apply_window_rule({
-  name = "windowrule-008",
-  match = {
-    class = "^(zen-alpha|zen)$",
-  },
-  tag = "+browser",
-})
-
-apply_window_rule({
-  name = "windowrule-009",
+  name = "tag-notifications-swaync",
   match = {
     class = "^(swaync-control-center|swaync-notification-window|swaync-client|class)$",
   },
@@ -88,7 +32,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-010",
+  name = "tag-kool-cheat-sheet",
   match = {
     title = "^(KooL Quick Cheat Sheet)$",
   },
@@ -96,7 +40,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-011",
+  name = "tag-kool-hyprland-settings",
   match = {
     title = "^(KooL Hyprland Settings)$",
   },
@@ -104,7 +48,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-012",
+  name = "tag-kool-settings-nwg-tools",
   match = {
     class = "^(nwg-displays|nwg-look)$",
   },
@@ -112,7 +56,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-013",
+  name = "tag-terminal-emulators",
   match = {
     class = "^(ghostty|wezterm|Alacritty|kitty|kitty-dropterm)$",
   },
@@ -120,7 +64,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-014",
+  name = "tag-email-thunderbird",
   match = {
     class = "^([Tt]hunderbird|org.mozilla.Thunderbird)$",
   },
@@ -128,7 +72,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-015",
+  name = "tag-email-betterbird",
   match = {
     class = "^(eu.betterbird.Betterbird)$",
   },
@@ -136,7 +80,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-016",
+  name = "tag-email-evolution",
   match = {
     class = "^(org.gnome.Evolution)$",
   },
@@ -144,7 +88,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-017",
+  name = "tag-projects-vscodium",
   match = {
     class = "^(codium|codium-url-handler|VSCodium)$",
   },
@@ -152,7 +96,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-018",
+  name = "tag-projects-vscode",
   match = {
     class = "^(VSCode|code|code-url-handler)$",
   },
@@ -160,7 +104,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-019",
+  name = "tag-projects-jetbrains",
   match = {
     class = "^(jetbrains-.+)$",
   },
@@ -168,7 +112,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-020",
+  name = "tag-projects-zed",
   match = {
     class = "^(dev.zed.Zed|antigravity)$",
   },
@@ -176,7 +120,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-021",
+  name = "tag-screenshare-obs",
   match = {
     class = "^(com.obsproject.Studio)$",
   },
@@ -184,7 +128,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-022",
+  name = "tag-im-discord-family",
   match = {
     class = "^([Dd]iscord|[Ww]ebCord|[Vv]esktop)$",
   },
@@ -192,7 +136,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-023",
+  name = "tag-im-ferdium",
   match = {
     class = "^([Ff]erdium)$",
   },
@@ -200,7 +144,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-024",
+  name = "tag-im-whatsapp",
   match = {
     class = "^([Ww]hatsapp-for-linux|ZapZap|com.rtosta.zapzap)$",
   },
@@ -208,7 +152,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-025",
+  name = "tag-im-telegram",
   match = {
     class = "^(org.telegram.desktop|io.github.tdesktop_x64.TDesktop)$",
   },
@@ -216,7 +160,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-026",
+  name = "tag-im-teams",
   match = {
     class = "^(teams-for-linux)$",
   },
@@ -224,7 +168,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-027",
+  name = "tag-im-element",
   match = {
     class = "^(im.riot.Riot|Element)$",
   },
@@ -232,7 +176,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-028",
+  name = "tag-games-gamescope",
   match = {
     class = "^(gamescope)$",
   },
@@ -240,7 +184,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-029",
+  name = "tag-games-steam-app",
   match = {
     class = "^(steam_app_\\\\d+)$",
   },
@@ -248,7 +192,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-030",
+  name = "tag-games-proton",
   match = {
     xdg_tag = "^(proton-game)$",
   },
@@ -256,7 +200,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-031",
+  name = "tag-gamestore-steam",
   match = {
     class = "^([Ss]team)$",
   },
@@ -264,7 +208,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-032",
+  name = "tag-gamestore-lutris",
   match = {
     title = "^([Ll]utris)$",
   },
@@ -272,7 +216,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-033",
+  name = "tag-gamestore-heroic",
   match = {
     class = "^(com.heroicgameslauncher.hgl)$",
   },
@@ -280,7 +224,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-034",
+  name = "tag-file-manager-common",
   match = {
     class = "^([Tt]hunar|org.gnome.Nautilus|[Pp]cmanfm-qt)$",
   },
@@ -288,7 +232,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-035",
+  name = "tag-file-manager-warp",
   match = {
     class = "^(app.drey.Warp)$",
   },
@@ -296,7 +240,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-036",
+  name = "tag-wallpaper-waytrogen",
   match = {
     class = "^([Ww]aytrogen)$",
   },
@@ -304,7 +248,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-037",
+  name = "tag-multimedia-audacious",
   match = {
     class = "^([Aa]udacious)$",
   },
@@ -312,7 +256,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-038",
+  name = "tag-multimedia-video-players",
   match = {
     class = "^([Mm]pv|vlc)$",
   },
@@ -320,7 +264,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-039",
+  name = "tag-settings-rog-control",
   match = {
     title = "^(ROG Control)$",
   },
@@ -328,7 +272,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-040",
+  name = "tag-settings-wihotspot",
   match = {
     class = "^(wihotspot(-gui)?)$",
   },
@@ -336,7 +280,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-041",
+  name = "tag-settings-baobab",
   match = {
     class = "^([Bb]aobab|org.gnome.[Bb]aobab)$",
   },
@@ -344,7 +288,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-042",
+  name = "tag-settings-disks-and-hotspot",
   match = {
     class = "^(gnome-disks|wihotspot(-gui)?)$",
   },
@@ -352,7 +296,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-043",
+  name = "tag-settings-kvantum",
   match = {
     title = "(Kvantum Manager)",
   },
@@ -360,7 +304,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-044",
+  name = "tag-settings-file-roller",
   match = {
     class = "^(file-roller|org.gnome.FileRoller)$",
   },
@@ -368,7 +312,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-045",
+  name = "tag-settings-network-blueman",
   match = {
     class = "^(nm-applet|nm-connection-editor|blueman-manager)$",
   },
@@ -376,7 +320,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-046",
+  name = "tag-settings-pavucontrol",
   match = {
     class = "^(pavucontrol|org.pulseaudio.pavucontrol|com.saivert.pwvucontrol)$",
   },
@@ -384,7 +328,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-047",
+  name = "tag-settings-qtct",
   match = {
     class = "^(qt5ct|qt6ct)$",
   },
@@ -392,7 +336,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-048",
+  name = "tag-settings-xdg-portal-gtk",
   match = {
     class = "(xdg-desktop-portal-gtk)",
   },
@@ -400,7 +344,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-049",
+  name = "tag-settings-polkit-kde",
   match = {
     class = "^(org.kde.polkit-kde-authentication-agent-1)$",
   },
@@ -408,7 +352,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-050",
+  name = "tag-settings-rofi",
   match = {
     class = "^([Rr]ofi)$",
   },
@@ -416,7 +360,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-051",
+  name = "tag-settings-btrfs-assistant",
   match = {
     class = "^(btrfs-assistant)$",
   },
@@ -424,7 +368,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-052",
+  name = "tag-settings-timeshift",
   match = {
     class = "^(timeshift-gtk)$",
   },
@@ -432,7 +376,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-053",
+  name = "tag-viewer-system-monitor",
   match = {
     class = "^(gnome-system-monitor|org.gnome.SystemMonitor|io.missioncenter.MissionCenter)$",
   },
@@ -440,7 +384,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-054",
+  name = "tag-viewer-evince",
   match = {
     class = "^(evince)$",
   },
@@ -448,7 +392,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-055",
+  name = "tag-viewer-image-viewers",
   match = {
     class = "^(eog|org.gnome.Loupe)$",
   },
@@ -456,7 +400,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-056",
+  name = "multimedia-disable-blur",
   match = {
     tag = "multimedia",
   },
@@ -464,7 +408,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-057",
+  name = "multimedia-force-opacity",
   match = {
     tag = "multimedia",
   },
@@ -472,7 +416,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-058",
+  name = "float-zoom-onedriver",
   match = {
     class = "([Zz]oom|onedriver|onedriver-launcher)",
   },
@@ -480,7 +424,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-059",
+  name = "float-video-players",
   match = {
     class = "^(mpv|com.github.rafostar.Clapper)$",
   },
@@ -488,7 +432,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-060",
+  name = "float-qalculate",
   match = {
     class = "^([Qq]alculate-gtk)$",
   },
@@ -496,7 +440,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-061",
+  name = "float-center-auth-required-title",
   match = {
     title = "^(Authentication Required)$",
   },
@@ -505,7 +449,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-062",
+  name = "float-center-polkit-auth-dialog",
   match = {
     class = "^(xfce-polkit|mate-polkit|polkit-mate-authentication-agent-1)$",
     title = "^(Authentication required|Authentication Required)$",
@@ -516,7 +460,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-063",
+  name = "float-vscodium-secondary-window",
   match = {
     class = "(codium|codium-url-handler|VSCodium)",
     title = "negative:(.*codium.*|.*VSCodium.*)",
@@ -525,7 +469,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-064",
+  name = "float-heroic-secondary-window",
   match = {
     class = "^(com.heroicgameslauncher.hgl)$",
     title = "negative:(Heroic Games Launcher)",
@@ -534,7 +478,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-065",
+  name = "float-steam-secondary-window",
   match = {
     class = "^([Ss]team)$",
     title = "negative:^([Ss]team)$",
@@ -543,7 +487,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-066",
+  name = "float-center-add-folder-dialog",
   match = {
     title = "^(Add Folder to Workspace)$",
   },
@@ -553,7 +497,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-067",
+  name = "float-center-save-as-dialog",
   match = {
     title = "^(Save As)$",
   },
@@ -563,7 +507,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-068",
+  name = "float-open-files-dialog",
   match = {
     initial_title = "(Open Files)",
   },
@@ -572,7 +516,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-069",
+  name = "float-center-sddm-background",
   match = {
     title = "^(SDDM Background)$",
   },
@@ -582,7 +526,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-070",
+  name = "float-center-yad-dialog",
   match = {
     class = "^(yad)$",
   },
@@ -592,7 +536,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-071",
+  name = "float-center-hyprland-donate",
   match = {
     class = "^(hyprland-donate-screen)$",
   },
@@ -601,7 +545,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-072",
+  name = "center-rog-control",
   match = {
     title = "^(ROG Control)$",
   },
@@ -609,7 +553,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-073",
+  name = "center-keybindings",
   match = {
     title = "^(Keybindings)$",
   },
@@ -617,7 +561,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-074",
+  name = "center-pavucontrol",
   match = {
     class = "^(pavucontrol|org.pulseaudio.pavucontrol|com.saivert.pwvucontrol)$",
   },
@@ -625,7 +569,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-075",
+  name = "center-whatsapp",
   match = {
     class = "^([Ww]hatsapp-for-linux|ZapZap|com.rtosta.zapzap)$",
   },
@@ -633,7 +577,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-076",
+  name = "center-network-editor",
   match = {
     class = "^(nm-connection-editor)$",
   },
@@ -641,7 +585,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-077",
+  name = "center-nm-auth-dialog",
   match = {
     class = "^(nm-applet)$",
     title = "^(Wi-Fi Network Authentication Required)$",
@@ -650,7 +594,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-078",
+  name = "idle-inhibit-fullscreen-bool",
   match = {
     fullscreen = true,
   },
@@ -658,7 +602,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-079",
+  name = "idle-inhibit-fullscreen-int",
   match = {
     fullscreen = 1,
   },
@@ -666,7 +610,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-080",
+  name = "idle-inhibit-any-class",
   match = {
     class = ".*",
   },
@@ -674,7 +618,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-081",
+  name = "idle-inhibit-any-title",
   match = {
     title = ".*",
   },
@@ -682,7 +626,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-082",
+  name = "opacity-browser-tag",
   match = {
     tag = "browser",
   },
@@ -690,7 +634,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-083",
+  name = "opacity-projects-tag",
   match = {
     tag = "projects",
   },
@@ -698,7 +642,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-084",
+  name = "opacity-im-tag",
   match = {
     tag = "im",
   },
@@ -706,7 +650,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-085",
+  name = "opacity-multimedia-tag",
   match = {
     tag = "multimedia",
   },
@@ -714,7 +658,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-086",
+  name = "opacity-file-manager-tag",
   match = {
     tag = "file-manager",
   },
@@ -722,7 +666,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-087",
+  name = "opacity-terminal-tag",
   match = {
     tag = "terminal",
   },
@@ -730,7 +674,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-088",
+  name = "opacity-text-editors",
   match = {
     class = "^(gedit|org.gnome.TextEditor|mousepad)$",
   },
@@ -738,7 +682,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-089",
+  name = "opacity-deluge",
   match = {
     class = "^(deluge)$",
   },
@@ -746,7 +690,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-090",
+  name = "opacity-seahorse",
   match = {
     class = "^(seahorse)$",
   },
@@ -754,7 +698,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-091",
+  name = "no-initial-focus-jetbrains",
   match = {
     class = "^(jetbrains-.*)$",
   },
@@ -762,7 +706,7 @@ apply_window_rule({
 })
 
 apply_window_rule({
-  name = "windowrule-092",
+  name = "no-initial-focus-wind-title",
   match = {
     title = "^(wind.*)$",
   },
