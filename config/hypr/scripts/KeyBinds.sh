@@ -23,7 +23,8 @@ user_keybinds_conf="$hypr_dir/UserConfigs/UserKeybinds.conf"
 laptop_conf="$hypr_dir/UserConfigs/Laptops.conf"
 lua_keybinds_conf="$hypr_dir/lua/keybinds.lua"
 lua_user_keybinds="$hypr_dir/UserConfigs/user_keybinds.lua"
-lua_system_keybinds="$hypr_dir/UserConfigs/system_keybinds.lua"
+lua_system_keybinds="$hypr_dir/configs/system_keybinds.lua"
+lua_legacy_system_keybinds="$hypr_dir/UserConfigs/system_keybinds.lua"
 lua_overrides="$hypr_dir/UserConfigs/user_overrides.lua"
 rofi_theme="$HOME/.config/rofi/config-keybinds.rasi"
 msg='☣️ NOTE ☣️: Clicking with Mouse or Pressing ENTER will have NO function'
@@ -40,7 +41,11 @@ fi
 # collect raw bind lines from available files
 if [[ "$hypr_config_mode" == "lua" ]]; then
   files=("$lua_keybinds_conf")
-  [[ -f "$lua_system_keybinds" ]] && files+=("$lua_system_keybinds")
+  if [[ -f "$lua_system_keybinds" ]]; then
+    files+=("$lua_system_keybinds")
+  elif [[ -f "$lua_legacy_system_keybinds" ]]; then
+    files+=("$lua_legacy_system_keybinds")
+  fi
   [[ -f "$lua_user_keybinds" ]] && files+=("$lua_user_keybinds")
   [[ -f "$lua_overrides" ]] && files+=("$lua_overrides")
 else

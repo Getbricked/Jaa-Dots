@@ -43,11 +43,17 @@ get_layouts() {
     local layouts=""
     if [[ "$hypr_config_mode" == "lua" ]]; then
         local lua_user="$hypr_dir/UserConfigs/user_settings.lua"
-        local lua_sys="$hypr_dir/lua/settings.lua"
+        local lua_sys="$hypr_dir/configs/system_settings.lua"
+        local lua_legacy_sys="$hypr_dir/UserConfigs/system_settings.lua"
+        local lua_pristine_sys="$hypr_dir/lua/settings.lua"
         if [[ -f "$lua_user" ]] && grep -q 'kb_layout' "$lua_user" 2>/dev/null; then
             layouts=$(grep 'kb_layout' "$lua_user" | sed -n 's/.*kb_layout\s*=\s*"\([^"]*\)".*/\1/p' | head -n1)
         elif [[ -f "$lua_sys" ]] && grep -q 'kb_layout' "$lua_sys" 2>/dev/null; then
             layouts=$(grep 'kb_layout' "$lua_sys" | sed -n 's/.*kb_layout\s*=\s*"\([^"]*\)".*/\1/p' | head -n1)
+        elif [[ -f "$lua_legacy_sys" ]] && grep -q 'kb_layout' "$lua_legacy_sys" 2>/dev/null; then
+            layouts=$(grep 'kb_layout' "$lua_legacy_sys" | sed -n 's/.*kb_layout\s*=\s*"\([^"]*\)".*/\1/p' | head -n1)
+        elif [[ -f "$lua_pristine_sys" ]] && grep -q 'kb_layout' "$lua_pristine_sys" 2>/dev/null; then
+            layouts=$(grep 'kb_layout' "$lua_pristine_sys" | sed -n 's/.*kb_layout\s*=\s*"\([^"]*\)".*/\1/p' | head -n1)
         fi
     else
         local conf_user="$hypr_dir/UserConfigs/UserSettings.conf"

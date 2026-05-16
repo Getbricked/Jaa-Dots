@@ -21,7 +21,8 @@ fi
 
 # Resolve defaults file used to get terminal/editor values
 config_file="$hypr_dir/UserConfigs/01-UserDefaults.conf"
-lua_defaults_file="$hypr_dir/lua/user_defaults.lua"
+lua_defaults_file="$hypr_dir/UserConfigs/user_defaults.lua"
+legacy_lua_defaults_file="$hypr_dir/lua/user_defaults.lua"
 term="${term:-${TERM:-kitty}}"
 edit="${edit:-${EDITOR:-nano}}"
 visual="${visual:-${VISUAL:-}}"
@@ -30,20 +31,27 @@ if [[ "$hypr_config_mode" == "conf" && -f "$config_file" ]]; then
     tmp_config_file=$(mktemp)
     sed 's/^\$//g; s/ = /=/g' "$config_file" > "$tmp_config_file"
     source "$tmp_config_file"
-elif [[ "$hypr_config_mode" == "lua" && -f "$lua_defaults_file" ]]; then
-    lua_term=$(sed -n 's/^[[:space:]]*KOOLDOTS_DEFAULTS\.term[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$lua_defaults_file" | tail -n1)
-    lua_edit=$(sed -n 's/^[[:space:]]*KOOLDOTS_DEFAULTS\.edit[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$lua_defaults_file" | tail -n1)
-    lua_visual=$(sed -n 's/^[[:space:]]*KOOLDOTS_DEFAULTS\.visual[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$lua_defaults_file" | tail -n1)
-    [[ -n "$lua_term" ]] && term="$lua_term"
-    [[ -n "$lua_edit" ]] && edit="$lua_edit"
-    [[ -n "$lua_visual" ]] && visual="$lua_visual"
+elif [[ "$hypr_config_mode" == "lua" ]]; then
+    defaults_source=""
+    if [[ -f "$lua_defaults_file" ]]; then
+        defaults_source="$lua_defaults_file"
+    elif [[ -f "$legacy_lua_defaults_file" ]]; then
+        defaults_source="$legacy_lua_defaults_file"
+    fi
+    if [[ -n "$defaults_source" ]]; then
+        lua_term=$(sed -n 's/^[[:space:]]*KOOLDOTS_DEFAULTS\.term[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$defaults_source" | tail -n1)
+        lua_edit=$(sed -n 's/^[[:space:]]*KOOLDOTS_DEFAULTS\.edit[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$defaults_source" | tail -n1)
+        lua_visual=$(sed -n 's/^[[:space:]]*KOOLDOTS_DEFAULTS\.visual[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$defaults_source" | tail -n1)
+        [[ -n "$lua_term" ]] && term="$lua_term"
+        [[ -n "$lua_edit" ]] && edit="$lua_edit"
+        [[ -n "$lua_visual" ]] && visual="$lua_visual"
+    fi
 fi
 # ##################################### #
 
 # variables
 configs="$hypr_dir/configs"
 UserConfigs="$hypr_dir/UserConfigs"
-lua_configs="$hypr_dir/lua"
 rofi_theme="$HOME/.config/rofi/config-edit.rasi"
 msg=' ⁉️ Choose what to do ⁉️'
 iDIR="$HOME/.config/swaync/images"
@@ -85,6 +93,27 @@ is_tui_editor() {
     esac
 
     return 1
+}
+
+resolve_system_lua_file() {
+    local file_name="$1"
+    local preferred="$configs/$file_name"
+    local legacy="$UserConfigs/$file_name"
+    if [[ -f "$preferred" || ! -f "$legacy" ]]; then
+        printf '%s' "$preferred"
+    else
+        printf '%s' "$legacy"
+    fi
+}
+
+resolve_user_defaults_lua_file() {
+    local preferred="$UserConfigs/user_defaults.lua"
+    local legacy="$hypr_dir/lua/user_defaults.lua"
+    if [[ -f "$preferred" || ! -f "$legacy" ]]; then
+        printf '%s' "$preferred"
+    else
+        printf '%s' "$legacy"
+    fi
 }
 # Function to toggle Rainbow Borders script availability and refresh UI components
 toggle_rainbow_borders() {
@@ -277,7 +306,7 @@ main() {
     # Map choices to corresponding files
     case "$choice" in
     	"Edit User Defaults")
-            if [[ "$hypr_config_mode" == "lua" ]]; then file="$lua_configs/user_defaults.lua"; else file="$UserConfigs/01-UserDefaults.conf"; fi ;;
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_user_defaults_lua_file)"; else file="$UserConfigs/01-UserDefaults.conf"; fi ;;
         "Edit User ENV variables")
             if [[ "$hypr_config_mode" == "lua" ]]; then file="$UserConfigs/user_env.lua"; else file="$UserConfigs/ENVariables.conf"; fi ;;
         "Edit User Keybinds")
@@ -303,15 +332,15 @@ main() {
         "Edit User Laptop Settings")
             if [[ "$hypr_config_mode" == "lua" ]]; then file="$UserConfigs/user_laptops.lua"; else file="$UserConfigs/Laptops.conf"; fi ;;
         "Edit System Default Keybinds")
-            if [[ "$hypr_config_mode" == "lua" ]]; then file="$UserConfigs/system_keybinds.lua"; else file="$configs/Keybinds.conf"; fi ;;
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_system_lua_file system_keybinds.lua)"; else file="$configs/Keybinds.conf"; fi ;;
         "Edit System Default Startup Apps")
-            if [[ "$hypr_config_mode" == "lua" ]]; then file="$UserConfigs/system_startup.lua"; else file="$configs/Startup_Apps.conf"; fi ;;
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_system_lua_file system_startup.lua)"; else file="$configs/Startup_Apps.conf"; fi ;;
         "Edit System Default Window Rules")
-            if [[ "$hypr_config_mode" == "lua" ]]; then file="$UserConfigs/system_window_rules.lua"; else file="$configs/WindowRules.conf"; fi ;;
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_system_lua_file system_window_rules.lua)"; else file="$configs/WindowRules.conf"; fi ;;
         "Edit System Default Layer Rules")
-            if [[ "$hypr_config_mode" == "lua" ]]; then file="$UserConfigs/system_layer_rules.lua"; else file="$configs/LayerRules.conf"; fi ;;
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_system_lua_file system_layer_rules.lua)"; else file="$configs/LayerRules.conf"; fi ;;
         "Edit System Default Settings")
-            if [[ "$hypr_config_mode" == "lua" ]]; then file="$UserConfigs/system_settings.lua"; else file="$configs/SystemSettings.conf"; fi ;;
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_system_lua_file system_settings.lua)"; else file="$configs/SystemSettings.conf"; fi ;;
         "Set SDDM Wallpaper") $scriptsDir/sddm_wallpaper.sh --normal ;;
         "Choose Kitty Terminal Theme") $scriptsDir/Kitty_themes.sh ;;
         "Choose Ghostty Terminal Theme") $scriptsDir/Ghostty_themes.sh ;;

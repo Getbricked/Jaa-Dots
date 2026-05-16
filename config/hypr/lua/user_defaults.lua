@@ -21,3 +21,13 @@ KOOLDOTS_DEFAULTS.visual = visual
 KOOLDOTS_DEFAULTS.term = "kitty"
 KOOLDOTS_DEFAULTS.files = "thunar"
 KOOLDOTS_DEFAULTS.search_engine = "https://www.google.com/search?q={}"
+
+-- Optional user overrides live outside the pristine lua/ source tree.
+do
+  local configHome = os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")
+  local userDefaults = configHome .. "/hypr/UserConfigs/user_defaults.lua"
+  local ok, err = pcall(dofile, userDefaults)
+  if not ok and err and tostring(err):find("No such file or directory", 1, true) == nil then
+    print("[WARN] Unable to load user defaults file " .. userDefaults .. ": " .. tostring(err))
+  end
+end

@@ -356,6 +356,7 @@ restore_user_configs() {
   local BACKUP_DIR
   BACKUP_DIR=$(get_backup_dirname)
   local BACKUP_DIR_PATH="$DIRPATH-backup-$BACKUP_DIR/UserConfigs"
+  local BACKUP_CONFIGS_PATH="$DIRPATH-backup-$BACKUP_DIR/configs"
 
   if [ -z "$BACKUP_DIR" ]; then
     echo "${ERROR:-[ERROR]} - Backup directory name is empty. Exiting." 2>&1 | tee -a "$log"
@@ -452,6 +453,19 @@ restore_user_configs() {
           fi
         fi
       done
+    fi
+  fi
+
+  if [ -d "$BACKUP_CONFIGS_PATH" ]; then
+    local restored_system_lua=0
+    local lua_file
+    mkdir -p "$DIRPATH/configs"
+    while IFS= read -r -d '' lua_file; do
+      cp -f "$lua_file" "$DIRPATH/configs/"
+      restored_system_lua=1
+    done < <(find "$BACKUP_CONFIGS_PATH" -maxdepth 1 -type f -name 'system_*.lua' -print0)
+    if [ "$restored_system_lua" -eq 1 ]; then
+      echo "${OK:-[OK]} - Restored migrated system Lua overlays to $DIRPATH/configs." 2>&1 | tee -a "$log"
     fi
   fi
 

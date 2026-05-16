@@ -172,14 +172,14 @@ if [ "$DRY_RUN" -eq 1 ]; then
     fi
     echo "[DRY-RUN] Would copy: $SRC_HYPR_DIR/hyprland.lua -> $DEST_HYPR_DIR/hyprland.lua"
     echo "[DRY-RUN] Would replace Lua module directory: $DEST_HYPR_DIR/lua"
-    echo "[DRY-RUN] Would generate split UserConfigs Lua overlays:"
-    echo "[DRY-RUN]   - $USER_CONFIGS_DIR/system_env.lua"
-    echo "[DRY-RUN]   - $USER_CONFIGS_DIR/system_startup.lua"
-    echo "[DRY-RUN]   - $USER_CONFIGS_DIR/system_window_rules.lua"
-    echo "[DRY-RUN]   - $USER_CONFIGS_DIR/system_layer_rules.lua"
-    echo "[DRY-RUN]   - $USER_CONFIGS_DIR/system_keybinds.lua"
-    echo "[DRY-RUN]   - $USER_CONFIGS_DIR/system_settings.lua"
-    echo "[DRY-RUN]   - $USER_CONFIGS_DIR/system_laptops.lua"
+    echo "[DRY-RUN] Would generate split configs/UserConfigs Lua overlays:"
+    echo "[DRY-RUN]   - $CONFIGS_DIR/system_env.lua"
+    echo "[DRY-RUN]   - $CONFIGS_DIR/system_startup.lua"
+    echo "[DRY-RUN]   - $CONFIGS_DIR/system_window_rules.lua"
+    echo "[DRY-RUN]   - $CONFIGS_DIR/system_layer_rules.lua"
+    echo "[DRY-RUN]   - $CONFIGS_DIR/system_keybinds.lua"
+    echo "[DRY-RUN]   - $CONFIGS_DIR/system_settings.lua"
+    echo "[DRY-RUN]   - $CONFIGS_DIR/system_laptops.lua"
     echo "[DRY-RUN]   - $USER_CONFIGS_DIR/user_env.lua"
     echo "[DRY-RUN]   - $USER_CONFIGS_DIR/user_startup.lua"
     echo "[DRY-RUN]   - $USER_CONFIGS_DIR/user_window_rules.lua"
@@ -189,6 +189,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
     echo "[DRY-RUN]   - $USER_CONFIGS_DIR/user_decorations.lua"
     echo "[DRY-RUN]   - $USER_CONFIGS_DIR/user_animations.lua"
     echo "[DRY-RUN]   - $USER_CONFIGS_DIR/user_laptops.lua"
+    echo "[DRY-RUN]   - $USER_CONFIGS_DIR/user_defaults.lua"
     if [ -d "$USER_CONFIGS_DIR" ]; then
       echo "[DRY-RUN] Would move UserConfigs/*.conf into: $USER_CONFIGS_LEGACY_DIR"
     fi
@@ -222,6 +223,7 @@ rm -rf "$DEST_HYPR_DIR/lua"
 cp -a "$SRC_HYPR_DIR/lua" "$DEST_HYPR_DIR/lua"
 mkdir -p "$USER_CONFIGS_DIR" "$CONFIGS_DIR"
 python3 - \
+  "$CONFIGS_DIR" \
   "$USER_CONFIGS_DIR" \
   "$SYSTEM_WINDOW_RULES" \
   "$SYSTEM_LAYER_RULES" \
@@ -251,34 +253,34 @@ HEADER = """-- ==================================================
 --  SPDX-License-Identifier: GPL-3.0-or-later
 -- ==================================================
 """
-
-user_configs_dir = Path(sys.argv[1])
-system_window_rules_path = Path(sys.argv[2])
-system_layer_rules_path = Path(sys.argv[3])
-system_keybinds_path = Path(sys.argv[4])
-system_env_path = Path(sys.argv[5])
-system_startup_path = Path(sys.argv[6])
-system_settings_path = Path(sys.argv[7])
-system_laptops_path = Path(sys.argv[8])
-window_rules_path = Path(sys.argv[9])
-layer_rules_path = Path(sys.argv[10])
-keybinds_path = Path(sys.argv[11])
-env_path = Path(sys.argv[12])
-startup_path = Path(sys.argv[13])
-settings_path = Path(sys.argv[14])
-decorations_path = Path(sys.argv[15])
-animations_path = Path(sys.argv[16])
-laptops_path = Path(sys.argv[17])
-user_defaults_path = Path(sys.argv[18])
+system_configs_dir = Path(sys.argv[1])
+user_configs_dir = Path(sys.argv[2])
+system_window_rules_path = Path(sys.argv[3])
+system_layer_rules_path = Path(sys.argv[4])
+system_keybinds_path = Path(sys.argv[5])
+system_env_path = Path(sys.argv[6])
+system_startup_path = Path(sys.argv[7])
+system_settings_path = Path(sys.argv[8])
+system_laptops_path = Path(sys.argv[9])
+window_rules_path = Path(sys.argv[10])
+layer_rules_path = Path(sys.argv[11])
+keybinds_path = Path(sys.argv[12])
+env_path = Path(sys.argv[13])
+startup_path = Path(sys.argv[14])
+settings_path = Path(sys.argv[15])
+decorations_path = Path(sys.argv[16])
+animations_path = Path(sys.argv[17])
+laptops_path = Path(sys.argv[18])
+user_defaults_path = Path(sys.argv[19])
 
 files_out = {
-    "system_env": user_configs_dir / "system_env.lua",
-    "system_startup": user_configs_dir / "system_startup.lua",
-    "system_window_rules": user_configs_dir / "system_window_rules.lua",
-    "system_layer_rules": user_configs_dir / "system_layer_rules.lua",
-    "system_keybinds": user_configs_dir / "system_keybinds.lua",
-    "system_settings": user_configs_dir / "system_settings.lua",
-    "system_laptops": user_configs_dir / "system_laptops.lua",
+    "system_env": system_configs_dir / "system_env.lua",
+    "system_startup": system_configs_dir / "system_startup.lua",
+    "system_window_rules": system_configs_dir / "system_window_rules.lua",
+    "system_layer_rules": system_configs_dir / "system_layer_rules.lua",
+    "system_keybinds": system_configs_dir / "system_keybinds.lua",
+    "system_settings": system_configs_dir / "system_settings.lua",
+    "system_laptops": system_configs_dir / "system_laptops.lua",
     "env": user_configs_dir / "user_env.lua",
     "startup": user_configs_dir / "user_startup.lua",
     "window_rules": user_configs_dir / "user_window_rules.lua",
@@ -288,6 +290,7 @@ files_out = {
     "decorations": user_configs_dir / "user_decorations.lua",
     "animations": user_configs_dir / "user_animations.lua",
     "laptops": user_configs_dir / "user_laptops.lua",
+    "user_defaults": user_configs_dir / "user_defaults.lua",
 }
 
 def strip_comment(line):
@@ -341,6 +344,45 @@ def parse_startup(path):
         if match:
             entries.append(match.group(1).strip())
     return entries
+def unquote(value):
+    value = value.strip()
+    if len(value) >= 2 and (
+        (value[0] == "\"" and value[-1] == "\"")
+        or (value[0] == "'" and value[-1] == "'")
+    ):
+        return value[1:-1]
+    return value
+
+def resolve_shell_default(value):
+    value = value.strip()
+    match = re.fullmatch(r"\$\{([A-Za-z_][A-Za-z0-9_]*)\:-([^}]*)\}", value)
+    if match:
+        env_value = os.getenv(match.group(1), "")
+        return env_value if env_value else match.group(2)
+    match = re.fullmatch(r"\$\{([A-Za-z_][A-Za-z0-9_]*)-([^}]*)\}", value)
+    if match:
+        env_value = os.getenv(match.group(1))
+        return env_value if env_value is not None else match.group(2)
+    match = re.fullmatch(r"\$([A-Za-z_][A-Za-z0-9_]*)", value)
+    if match:
+        return os.getenv(match.group(1), "")
+    return value
+
+def parse_user_defaults(path):
+    defaults = {}
+    if not path.exists():
+        return defaults
+    for raw in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        line = strip_comment(raw)
+        if not line:
+            continue
+        match = re.match(r"^\$([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$", line)
+        if not match:
+            continue
+        key = match.group(1)
+        value = unquote(resolve_shell_default(match.group(2)))
+        defaults[key] = value
+    return defaults
 
 def scalar(value, *, bool_words=True):
     value = value.strip()
@@ -626,6 +668,31 @@ system_env_entries = parse_env(system_env_path)
 env_entries = parse_env(env_path)
 system_startup_entries = parse_startup(system_startup_path)
 startup_entries = parse_startup(startup_path)
+parsed_user_defaults = parse_user_defaults(user_defaults_path)
+resolved_edit = parsed_user_defaults.get("edit", os.getenv("EDITOR") or "nano")
+resolved_visual = parsed_user_defaults.get("visual", os.getenv("VISUAL") or "")
+resolved_term = parsed_user_defaults.get("term", "kitty")
+resolved_files = parsed_user_defaults.get("files", "thunar")
+resolved_search_engine = parsed_user_defaults.get(
+    "Search_Engine",
+    parsed_user_defaults.get("search_engine", "https://www.google.com/search?q={}"),
+)
+
+user_defaults_lines = [
+    "-- User defaults overrides (auto-generated).",
+    "-- Edit this file for terminal/editor/file-manager/search defaults in Lua mode.",
+    "-- Example:",
+    "-- KOOLDOTS_DEFAULTS.term = \"ghostty\"",
+    "",
+    "KOOLDOTS_DEFAULTS = KOOLDOTS_DEFAULTS or {}",
+    f"KOOLDOTS_DEFAULTS.edit = {lua_string(resolved_edit)}",
+    f"KOOLDOTS_DEFAULTS.visual = {lua_string(resolved_visual)}",
+    f"KOOLDOTS_DEFAULTS.term = {lua_string(resolved_term)}",
+    f"KOOLDOTS_DEFAULTS.files = {lua_string(resolved_files)}",
+    f"KOOLDOTS_DEFAULTS.search_engine = {lua_string(resolved_search_engine)}",
+    f"KOOLDOTS_DEFAULTS.Search_Engine = {lua_string(resolved_search_engine)}",
+]
+write_file(files_out["user_defaults"], user_defaults_lines)
 
 system_env_lines = [
     "-- System defaults migrated from configs/ENVariables.conf (auto-generated).",
@@ -1088,16 +1155,42 @@ cat > "$USER_OVERRIDES_SHIM" <<'LUA'
 --  SPDX-License-Identifier: GPL-3.0-or-later
 -- ==================================================
 -- Auto-generated by scripts/migrate-hypr-to-lua.sh.
--- Loads split user-editable Lua files from ~/.config/hypr/UserConfigs.
+-- Loads split system/user Lua files from ~/.config/hypr/configs and ~/.config/hypr/UserConfigs.
 local configHome = os.getenv("XDG_CONFIG_HOME") or ((os.getenv("HOME") or "") .. "/.config")
+local hyprDir = configHome .. "/hypr"
+local systemDir = hyprDir .. "/configs"
 local userDir = configHome .. "/hypr/UserConfigs"
-local files = {
+
+local function load_optional(path)
+  local ok, err = pcall(dofile, path)
+  if ok then
+    return true
+  end
+  if err and tostring(err):find("No such file or directory", 1, true) ~= nil then
+    return false
+  end
+  print("[WARN] Unable to load user override file " .. path .. ": " .. tostring(err))
+  return false
+end
+
+local system_files = {
   "system_env.lua",
   "system_startup.lua",
   "system_window_rules.lua",
+  "system_layer_rules.lua",
   "system_keybinds.lua",
   "system_settings.lua",
   "system_laptops.lua",
+}
+for _, file in ipairs(system_files) do
+  local primary = systemDir .. "/" .. file
+  local legacy = userDir .. "/" .. file
+  if not load_optional(primary) then
+    load_optional(legacy)
+  end
+end
+
+local user_files = {
   "user_env.lua",
   "user_startup.lua",
   "user_window_rules.lua",
@@ -1109,12 +1202,9 @@ local files = {
   "user_laptops.lua",
   "user_overrides.lua", -- backward compatibility with older single-file overrides
 }
-for _, file in ipairs(files) do
+for _, file in ipairs(user_files) do
   local path = userDir .. "/" .. file
-  local ok, err = pcall(dofile, path)
-  if not ok and err and tostring(err):find("No such file or directory", 1, true) == nil then
-    print("[WARN] Unable to load user override file " .. path .. ": " .. tostring(err))
-  end
+  load_optional(path)
 end
 LUA
 
