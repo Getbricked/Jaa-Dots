@@ -25,29 +25,6 @@ LAST_TOGGLE_FILE="/tmp/dropdown_terminal_last_toggle"
 MIN_TOGGLE_INTERVAL_MS=250
 DROPDOWN_KITTY_CLASS="kitty-dropterm"
 
-HYPR_HAS_LUA_DISPATCHER=""
-
-lua_quote() {
-  local value="$1"
-  value=${value//\\/\\\\}
-  value=${value//\"/\\\"}
-  printf '\"%s\"' "$value"
-}
-
-supports_lua_dispatcher() {
-  if [ -n "$HYPR_HAS_LUA_DISPATCHER" ]; then
-    [ "$HYPR_HAS_LUA_DISPATCHER" = "true" ]
-    return
-  fi
-
-  if hyprctl dispatch "hl.dsp.exec_cmd(\"true\")" >/dev/null 2>&1; then
-    HYPR_HAS_LUA_DISPATCHER="true"
-  else
-    HYPR_HAS_LUA_DISPATCHER="false"
-  fi
-
-  [ "$HYPR_HAS_LUA_DISPATCHER" = "true" ]
-}
 
 hypr_dispatch() {
   local dispatcher="$1"
@@ -57,13 +34,7 @@ hypr_dispatch() {
 
 hypr_exec_cmd() {
   local command="$*"
-  if supports_lua_dispatcher; then
-    local quoted
-    quoted=$(lua_quote "$command")
-    hyprctl dispatch "hl.dsp.exec_cmd($quoted)"
-  else
-    hyprctl dispatch exec "$command"
-  fi
+  hyprctl dispatch exec "$command"
 }
 
 # Dropdown size and position configuration (percentages)
