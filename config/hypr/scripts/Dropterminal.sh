@@ -450,13 +450,13 @@ spawn_terminal() {
 
     # Small delay to ensure it's properly in special workspace
     sleep 0.2
-    # Move to current workspace but start hidden off-screen
+    # Move to current workspace and enforce floating geometry
     hypr_dispatch movetoworkspacesilent "$CURRENT_WS,address:$new_addr"
+    hypr_dispatch setfloating "address:$new_addr" >/dev/null 2>&1
     ensure_pinned "$new_addr"
     hypr_dispatch resizewindowpixel "exact $width $height,address:$new_addr" >/dev/null 2>&1
-    local off_y=$((target_y - height - 200))
-    hypr_dispatch movewindowpixel "exact $target_x $off_y,address:$new_addr" >/dev/null 2>&1
-    set_hidden_state "hidden"
+    hypr_dispatch movewindowpixel "exact $target_x $target_y,address:$new_addr" >/dev/null 2>&1
+    set_hidden_state "shown"
 
     return 0
   fi
