@@ -3,6 +3,7 @@
 ## v2.3.24
 
 - Fixed `DropDownterminal` adding lua support broke legacy hyprlang
+  - Part Duex: Fixed the fix to work in lua workflow
 - Updated description for logout/exit keybinding
   - It only said `exit` if you search for `logout` nothing is returned
 - Fixed logout keybinding and logout from menu not working in LUA config

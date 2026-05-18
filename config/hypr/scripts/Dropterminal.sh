@@ -24,17 +24,51 @@ LOCK_FILE="/tmp/dropdown_terminal_lock"
 LAST_TOGGLE_FILE="/tmp/dropdown_terminal_last_toggle"
 MIN_TOGGLE_INTERVAL_MS=250
 DROPDOWN_KITTY_CLASS="kitty-dropterm"
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+HYPR_DIR="$CONFIG_HOME/hypr"
+LUA_ENTRY="$HYPR_DIR/hyprland.lua"
+LEGACY_LUA_ENTRY="$CONFIG_HOME/hyprland.lua"
+
+if [[ -f "$LUA_ENTRY" || -f "$LEGACY_LUA_ENTRY" ]]; then
+  HYPR_CONFIG_MODE="lua"
+else
+  HYPR_CONFIG_MODE="conf"
+fi
+lua_escape() {
+  local value="$1"
+  value=${value//\\/\\\\}
+  value=${value//\"/\\\"}
+  value=${value//$'\n'/\\n}
+  printf '%s' "$value"
+}
 
 
 hypr_dispatch() {
   local dispatcher="$1"
   shift
-  hyprctl dispatch "$dispatcher" "$*"
+  local payload="$*"
+  if [[ "$HYPR_CONFIG_MODE" == "lua" ]]; then
+    local command="$dispatcher"
+    if [ -n "$payload" ]; then
+      command="$dispatcher $payload"
+    fi
+    local escaped
+    escaped="$(lua_escape "$command")"
+    hyprctl dispatch "hl.dsp.exec_raw(\"$escaped\")"
+  else
+    hyprctl dispatch "$dispatcher" "$payload"
+  fi
 }
 
 hypr_exec_cmd() {
   local command="$*"
-  hyprctl dispatch exec "$command"
+  if [[ "$HYPR_CONFIG_MODE" == "lua" ]]; then
+    local escaped
+    escaped="$(lua_escape "$command")"
+    hyprctl dispatch "hl.dsp.exec_cmd(\"$escaped\")"
+  else
+    hyprctl dispatch exec "$command"
+  fi
 }
 
 # Dropdown size and position configuration (percentages)
