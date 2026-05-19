@@ -450,8 +450,12 @@ spawn_terminal() {
   local windows_before=$(hyprctl clients -j)
   local count_before=$(echo "$windows_before" | jq 'length')
 
-  # Launch terminal, then move/resize it after Hyprland reports the new client.
-  hypr_exec_cmd "$TERMINAL_CMD"
+  # Launch terminal; on Hyprlang workflow pre-apply workspace/geometry hints to avoid visible zigzag.
+  local launch_cmd="$TERMINAL_CMD"
+  if [[ "$HYPR_CONFIG_MODE" == "conf" ]]; then
+    launch_cmd="[workspace $SPECIAL_WS silent;float;size $width $height;move $target_x $target_y] $TERMINAL_CMD"
+  fi
+  hypr_exec_cmd "$launch_cmd"
 
   local new_addr=""
   for _ in $(seq 1 20); do
@@ -482,14 +486,14 @@ spawn_terminal() {
     echo "$new_addr $monitor_name" >"$ADDR_FILE"
     debug_echo "Terminal created with address: $new_addr in special workspace on monitor $monitor_name"
 
-    # Small delay to ensure it's properly in special workspace
-    sleep 0.2
-    # Move to current workspace and enforce floating geometry
-    hypr_dispatch movetoworkspacesilent "$CURRENT_WS,address:$new_addr"
+    # Configure while hidden in special workspace, then reveal on the current workspace.
+    hypr_dispatch movetoworkspacesilent "$SPECIAL_WS,address:$new_addr"
+    sleep 0.05
     hypr_dispatch setfloating "address:$new_addr" >/dev/null 2>&1
     ensure_pinned "$new_addr"
     hypr_dispatch resizewindowpixel "exact $width $height,address:$new_addr" >/dev/null 2>&1
     hypr_dispatch movewindowpixel "exact $target_x $target_y,address:$new_addr" >/dev/null 2>&1
+    hypr_dispatch movetoworkspacesilent "$CURRENT_WS,address:$new_addr"
     set_hidden_state "shown"
 
     return 0
