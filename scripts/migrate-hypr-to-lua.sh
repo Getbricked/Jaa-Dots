@@ -43,6 +43,10 @@ CONFIGS_LEGACY_ROOT="$CONFIGS_DIR/$LEGACY_CONFIGS_DIR_NAME"
 USER_CONFIGS_LEGACY_DIR="$USER_CONFIGS_LEGACY_ROOT/$MIGRATION_TS"
 CONFIGS_LEGACY_DIR="$CONFIGS_LEGACY_ROOT/$MIGRATION_TS"
 USER_OVERRIDES_SHIM="$DEST_HYPR_DIR/lua/user_overrides.lua"
+DEST_MONITORS_CONF="$DEST_HYPR_DIR/monitors.conf"
+DEST_LUA_MONITORS="$DEST_HYPR_DIR/lua/monitors.lua"
+DEST_WORKSPACES_CONF="$DEST_HYPR_DIR/workspaces.conf"
+DEST_LUA_WORKSPACES="$DEST_HYPR_DIR/lua/workspaces.lua"
 SOURCE_LUA_ENTRY_ENABLED="$SRC_HYPR_DIR/hyprland.lua"
 SOURCE_LUA_ENTRY_DISABLED="$SRC_HYPR_DIR/hyprland.lua.disable"
 DEST_LUA_ENTRY="$DEST_HYPR_DIR/hyprland.lua"
@@ -122,6 +126,7 @@ if [ "$REVERT" -eq 1 ]; then
 else
   echo "[WARN] This enables Hyprland's Lua entrypoint for builds that support hyprland.lua."
   echo "[WARN] hyprland.conf remains in place as fallback; old .conf files move into LegacyConfigs/<timestamp>."
+  echo "[INFO] hypridle.conf and hyprlock*.conf stay as native .conf files because Hypridle/Hyprlock do not use Hyprland's Lua API."
 fi
 
 restore_latest_conf_backup() {
@@ -218,6 +223,8 @@ if [ "$DRY_RUN" -eq 1 ]; then
     echo "[DRY-RUN]   - $USER_CONFIGS_DIR/user_animations.lua"
     echo "[DRY-RUN]   - $USER_CONFIGS_DIR/user_laptops.lua"
     echo "[DRY-RUN]   - $USER_CONFIGS_DIR/user_defaults.lua"
+    echo "[DRY-RUN]   - $DEST_LUA_MONITORS (generated from $DEST_MONITORS_CONF)"
+    echo "[DRY-RUN]   - $DEST_LUA_WORKSPACES (generated from $DEST_WORKSPACES_CONF)"
     if [ -d "$USER_CONFIGS_DIR" ]; then
       echo "[DRY-RUN] Would move UserConfigs/*.conf into: $USER_CONFIGS_LEGACY_DIR"
     fi
@@ -288,7 +295,11 @@ python3 - \
   "$USER_DECORATIONS" \
   "$USER_ANIMATIONS" \
   "$USER_LAPTOPS" \
-  "$USER_CONFIGS_DIR/01-UserDefaults.conf" <<'PY'
+  "$USER_CONFIGS_DIR/01-UserDefaults.conf" \
+  "$DEST_MONITORS_CONF" \
+  "$DEST_LUA_MONITORS" \
+  "$DEST_WORKSPACES_CONF" \
+  "$DEST_LUA_WORKSPACES" <<'PY'
 import os
 import re
 import sys
@@ -319,6 +330,10 @@ decorations_path = Path(sys.argv[16])
 animations_path = Path(sys.argv[17])
 laptops_path = Path(sys.argv[18])
 user_defaults_path = Path(sys.argv[19])
+monitors_conf_path = Path(sys.argv[20])
+monitors_lua_path = Path(sys.argv[21])
+workspaces_conf_path = Path(sys.argv[22])
+workspaces_lua_path = Path(sys.argv[23])
 
 files_out = {
     "system_env": system_configs_dir / "system_env.lua",
@@ -338,6 +353,8 @@ files_out = {
     "animations": user_configs_dir / "user_animations.lua",
     "laptops": user_configs_dir / "user_laptops.lua",
     "user_defaults": user_configs_dir / "user_defaults.lua",
+    "monitors": monitors_lua_path,
+    "workspaces": workspaces_lua_path,
 }
 
 def strip_comment(line):
@@ -391,6 +408,251 @@ def parse_startup(path):
         if match:
             entries.append(match.group(1).strip())
     return entries
+
+MONITOR_DIRECTIVE_KEYS = {
+    "mirror",
+    "bitdepth",
+    "transform",
+    "cm",
+    "icc",
+    "vrr",
+    "addreserved",
+    "reserved",
+    "supports_hdr",
+    "supports_wide_color",
+    "supportshdr",
+    "supportswidecolor",
+    "max_luminance",
+    "max_avg_luminance",
+    "min_luminance",
+    "maxluminance",
+    "maxavgluminance",
+    "minluminance",
+    "sdr_max_luminance",
+    "sdr_min_luminance",
+    "sdr_eotf",
+    "sdrmaxluminance",
+    "sdrminluminance",
+    "sdreotf",
+    "sdrbrightness",
+    "sdrsaturation",
+}
+
+MONITOR_FIELD_MAP = {
+    "addreserved": "reserved",
+    "supportswidecolor": "supports_wide_color",
+    "supportshdr": "supports_hdr",
+    "maxluminance": "max_luminance",
+    "maxavgluminance": "max_avg_luminance",
+    "minluminance": "min_luminance",
+    "sdrmaxluminance": "sdr_max_luminance",
+    "sdrminluminance": "sdr_min_luminance",
+    "sdreotf": "sdr_eotf",
+}
+
+def parse_monitors(path):
+    entries = []
+    if not path.exists():
+        return entries
+
+    for raw in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        line = strip_comment(raw)
+        if not line:
+            continue
+        match = re.match(r"^monitor\s*=\s*(.+)$", line)
+        if not match:
+            continue
+
+        parts = [part.strip() for part in match.group(1).split(",")]
+        if len(parts) < 2:
+            continue
+
+        spec = {"output": parts[0]}
+        mode_or_directive = parts[1].lower().replace("-", "_")
+        extras = []
+
+        if mode_or_directive == "disable":
+            spec["mode"] = "disable"
+            entries.append(spec)
+            continue
+
+        if len(parts) >= 4 and mode_or_directive not in MONITOR_DIRECTIVE_KEYS:
+            spec["mode"] = parts[1]
+            if parts[2]:
+                spec["position"] = parts[2]
+            if parts[3]:
+                spec["scale"] = parts[3]
+            extras = parts[4:]
+        else:
+            extras = parts[1:]
+
+        i = 0
+        while i < len(extras):
+            key = extras[i].strip().lower().replace("-", "_")
+            if not key:
+                i += 1
+                continue
+            field = MONITOR_FIELD_MAP.get(key, key)
+
+            if field == "reserved" and i + 4 < len(extras):
+                spec["reserved"] = [
+                    extras[i + 1].strip(),
+                    extras[i + 2].strip(),
+                    extras[i + 3].strip(),
+                    extras[i + 4].strip(),
+                ]
+                i += 5
+                continue
+
+            if i + 1 >= len(extras):
+                i += 1
+                continue
+
+            value = extras[i + 1].strip()
+            if value:
+                spec[field] = value
+            i += 2
+
+        entries.append(spec)
+
+    return entries
+def parse_bool_word(value):
+    lowered = value.strip().lower()
+    if lowered in {"on", "true", "yes"}:
+        return True
+    if lowered in {"off", "false", "no"}:
+        return False
+    return None
+
+WORKSPACE_FIELD_MAP = {
+    "gapsin": "gaps_in",
+    "gapsout": "gaps_out",
+    "bordersize": "border_size",
+    "on_created_empty": "on_created_empty",
+    "layoutopt": "layout_opts",
+    "layoutopts": "layout_opts",
+}
+
+WORKSPACE_INVERTED_BOOL_FIELDS = {
+    "border": "no_border",
+    "rounding": "no_rounding",
+    "shadow": "no_shadow",
+}
+
+def parse_workspaces(path):
+    entries = []
+    if not path.exists():
+        return entries
+
+    for raw in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        line = strip_comment(raw)
+        if not line:
+            continue
+        match = re.match(r"^workspace\s*=\s*(.+)$", line)
+        if not match:
+            continue
+
+        parts = [part.strip() for part in match.group(1).split(",")]
+        if not parts or not parts[0]:
+            continue
+
+        rule = {"workspace": parts[0]}
+        for part in parts[1:]:
+            if ":" not in part:
+                continue
+            key, value = part.split(":", 1)
+            key = key.strip().lower().replace("-", "_")
+            value = value.strip()
+            if not key or value == "":
+                continue
+
+            if key in WORKSPACE_INVERTED_BOOL_FIELDS:
+                bool_value = parse_bool_word(value)
+                if bool_value is None:
+                    continue
+                rule[WORKSPACE_INVERTED_BOOL_FIELDS[key]] = not bool_value
+                continue
+
+            normalized = WORKSPACE_FIELD_MAP.get(key, key)
+            bool_value = parse_bool_word(value)
+            if bool_value is not None:
+                rule[normalized] = bool_value
+            else:
+                rule[normalized] = value
+
+        entries.append(rule)
+
+    return entries
+
+def emit_monitor(spec):
+    lines = [
+        "hl.monitor({",
+        f"    output = {lua_string(spec.get('output', ''))},",
+    ]
+
+    if "mode" in spec:
+        lines.append(f"    mode = {lua_string(spec['mode'])},")
+    if "position" in spec:
+        lines.append(f"    position = {lua_string(spec['position'])},")
+    if "scale" in spec:
+        lines.append(f"    scale = {lua_string(spec['scale'])},")
+    if "mirror" in spec:
+        lines.append(f"    mirror = {lua_string(spec['mirror'])},")
+
+    for key in [
+        "bitdepth",
+        "transform",
+        "vrr",
+        "supports_hdr",
+        "supports_wide_color",
+        "max_luminance",
+        "max_avg_luminance",
+        "min_luminance",
+        "sdr_max_luminance",
+        "sdr_min_luminance",
+        "sdrbrightness",
+        "sdrsaturation",
+    ]:
+        if key in spec:
+            lines.append(f"    {key} = {scalar(spec[key])},")
+
+    for key in ["cm", "icc", "sdr_eotf"]:
+        if key in spec:
+            lines.append(f"    {key} = {lua_string(spec[key])},")
+
+    if "reserved" in spec and len(spec["reserved"]) == 4:
+        top, right, bottom, left = spec["reserved"]
+        lines.extend([
+            "    reserved = {",
+            f"        top = {scalar(top)},",
+            f"        right = {scalar(right)},",
+            f"        bottom = {scalar(bottom)},",
+            f"        left = {scalar(left)},",
+            "    },",
+        ])
+
+    lines.append("})")
+    return "\n".join(lines)
+
+def emit_workspace_rule(spec):
+    lines = [
+        "hl.workspace_rule({",
+        f"    workspace = {lua_string(spec['workspace'])},",
+    ]
+    for key, value in spec.items():
+        if key == "workspace":
+            continue
+        if isinstance(value, bool):
+            rendered = "true" if value else "false"
+        else:
+            text = str(value).strip()
+            if re.fullmatch(r"[-+]?\d+(\.\d+)?", text):
+                rendered = text
+            else:
+                rendered = lua_string(text)
+        lines.append(f"    {key} = {rendered},")
+    lines.append("})")
+    return "\n".join(lines)
 def unquote(value):
     value = value.strip()
     if len(value) >= 2 and (
@@ -715,6 +977,8 @@ system_env_entries = parse_env(system_env_path)
 env_entries = parse_env(env_path)
 system_startup_entries = parse_startup(system_startup_path)
 startup_entries = parse_startup(startup_path)
+monitor_entries = parse_monitors(monitors_conf_path)
+workspace_entries = parse_workspaces(workspaces_conf_path)
 parsed_user_defaults = parse_user_defaults(user_defaults_path)
 resolved_edit = parsed_user_defaults.get("edit", os.getenv("EDITOR") or "nano")
 resolved_visual = parsed_user_defaults.get("visual", os.getenv("VISUAL") or "")
@@ -741,6 +1005,30 @@ user_defaults_lines = [
 ]
 write_file(files_out["user_defaults"], user_defaults_lines)
 
+if monitor_entries:
+    monitor_lines = [
+        "-- Monitors migrated from monitors.conf (auto-generated).",
+        "-- Edit monitors.conf and rerun scripts/migrate-hypr-to-lua.sh to regenerate this file.",
+        "",
+    ]
+    for spec in monitor_entries:
+        monitor_lines.append(emit_monitor(spec))
+        monitor_lines.append("")
+    write_file(files_out["monitors"], monitor_lines)
+else:
+    print(f"[INFO] No active monitor entries found in {monitors_conf_path}; keeping existing {files_out['monitors']}")
+if workspace_entries:
+    workspace_lines = [
+        "-- Workspace rules migrated from workspaces.conf (auto-generated).",
+        "-- Edit workspaces.conf and rerun scripts/migrate-hypr-to-lua.sh to regenerate this file.",
+        "",
+    ]
+    for spec in workspace_entries:
+        workspace_lines.append(emit_workspace_rule(spec))
+        workspace_lines.append("")
+    write_file(files_out["workspaces"], workspace_lines)
+else:
+    print(f"[INFO] No active workspace rules found in {workspaces_conf_path}; keeping existing {files_out['workspaces']}")
 system_env_lines = [
     "-- System defaults migrated from configs/ENVariables.conf (auto-generated).",
     "-- Edit this file to keep your previous configs/ ENVariables customizations in Lua mode.",
@@ -1274,9 +1562,41 @@ move_conf_files_to_legacy() {
     echo "[OK] Moved $label/*.conf -> $legacy_dir"
   fi
 }
+print_conversion_coverage_summary() {
+  echo "[INFO] Migration coverage summary (Hyprland Lua mode):"
+  cat <<SUMMARY
+[INFO]   Converted .conf -> .lua:
+[INFO]     - $DEST_MONITORS_CONF -> $DEST_LUA_MONITORS
+[INFO]     - $DEST_WORKSPACES_CONF -> $DEST_LUA_WORKSPACES
+[INFO]     - $SYSTEM_ENV_VARS -> $CONFIGS_DIR/system_env.lua
+[INFO]     - $SYSTEM_STARTUP_APPS -> $CONFIGS_DIR/system_startup.lua
+[INFO]     - $SYSTEM_WINDOW_RULES -> $CONFIGS_DIR/system_window_rules.lua
+[INFO]     - $SYSTEM_LAYER_RULES -> $CONFIGS_DIR/system_layer_rules.lua
+[INFO]     - $SYSTEM_KEYBINDS -> $CONFIGS_DIR/system_keybinds.lua
+[INFO]     - $SYSTEM_SETTINGS -> $CONFIGS_DIR/system_settings.lua
+[INFO]     - $SYSTEM_LAPTOPS -> $CONFIGS_DIR/system_laptops.lua
+[INFO]     - $USER_ENV_VARS -> $USER_CONFIGS_DIR/user_env.lua
+[INFO]     - $USER_STARTUP_APPS -> $USER_CONFIGS_DIR/user_startup.lua
+[INFO]     - $USER_WINDOW_RULES -> $USER_CONFIGS_DIR/user_window_rules.lua
+[INFO]     - $USER_LAYER_RULES -> $USER_CONFIGS_DIR/user_layer_rules.lua
+[INFO]     - $USER_KEYBINDS -> $USER_CONFIGS_DIR/user_keybinds.lua
+[INFO]     - $USER_SETTINGS -> $USER_CONFIGS_DIR/user_settings.lua
+[INFO]     - $USER_DECORATIONS -> $USER_CONFIGS_DIR/user_decorations.lua
+[INFO]     - $USER_ANIMATIONS -> $USER_CONFIGS_DIR/user_animations.lua
+[INFO]     - $USER_LAPTOPS -> $USER_CONFIGS_DIR/user_laptops.lua
+[INFO]     - $USER_CONFIGS_DIR/01-UserDefaults.conf -> $USER_CONFIGS_DIR/user_defaults.lua
+[INFO]   Intentionally native/template .conf files:
+[INFO]     - $DEST_HYPR_DIR/hypridle.conf
+[INFO]     - $DEST_HYPR_DIR/hyprlock.conf, hyprlock-1080p.conf, hyprlock-2k.conf
+[INFO]     - $DEST_HYPR_DIR/hyprland.conf (fallback/non-Lua entrypoint)
+[INFO]     - $DEST_HYPR_DIR/Monitor_Profiles/*.conf and $DEST_HYPR_DIR/animations/*.conf (preset profiles)
+[INFO]     - $USER_CONFIGS_DIR/LaptopDisplay.conf and $USER_CONFIGS_DIR/WorkSpaceRules.conf (legacy/helper files)
+SUMMARY
+}
 
 move_conf_files_to_legacy "$USER_CONFIGS_DIR" "$USER_CONFIGS_LEGACY_DIR" "$USER_CONFIGS_DIR"
 move_conf_files_to_legacy "$CONFIGS_DIR" "$CONFIGS_LEGACY_DIR" "$CONFIGS_DIR"
+print_conversion_coverage_summary
 
 echo "[OK] Lua Hyprland config copied."
 echo "[INFO] Restart Hyprland to test Lua config pickup."

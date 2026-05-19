@@ -2,6 +2,10 @@
 
 ## v2.3.24
 
+- Fixed: `scrpts/migrate-hypr-to-lua.sh`
+  - It didn't convert `monitors.conf` nor `workspaces.conf`
+  - Impropved summary to show converted and what's left native
+    - I.e. `hyprlock.conf` and `hypridle.conf` still use `.conf`
 - Fixed `DropDownterminal` adding lua support broke legacy hyprlang
   - Part Duex: Fixed the fix to work in lua workflow
 - Updated description for logout/exit keybinding
