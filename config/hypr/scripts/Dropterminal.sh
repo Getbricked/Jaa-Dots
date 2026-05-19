@@ -82,12 +82,32 @@ SLIDE_STEPS=5
 SLIDE_DELAY=5 # milliseconds between steps
 
 # Parse arguments
-if [ "$1" = "-d" ]; then
-  DEBUG=true
-  shift
-fi
+STARTUP_MODE=false
+while [ $# -gt 0 ]; do
+  case "$1" in
+  -d | --debug)
+    DEBUG=true
+    shift
+    ;;
+  --startup | --init)
+    STARTUP_MODE=true
+    shift
+    ;;
+  -h | --help)
+    echo "Usage: $0 [-d|--debug] [--startup|--init] <terminal_command>"
+    echo "Examples:"
+    echo "  $0 kitty"
+    echo "  $0 --startup kitty"
+    echo "  $0 -d \"kitty -e zsh\""
+    exit 0
+    ;;
+  *)
+    break
+    ;;
+  esac
+done
 
-TERMINAL_CMD="$1"
+TERMINAL_CMD="$*"
 if [[ "$TERMINAL_CMD" == kitty* ]] && [[ "$TERMINAL_CMD" != *"--class"* ]] && [[ "$TERMINAL_CMD" != *"--name"* ]] && [[ "$TERMINAL_CMD" != *"--app-id"* ]]; then
   TERMINAL_CMD="$TERMINAL_CMD --class $DROPDOWN_KITTY_CLASS"
 fi
@@ -97,25 +117,27 @@ exec 9>"$LOCK_FILE"
 flock -n 9 || exit 0
 
 # Debounce rapid toggles
-now_ms=""
-if date +%s%3N >/dev/null 2>&1; then
-  now_ms=$(date +%s%3N)
-else
-  now_ms=$(( $(date +%s) * 1000 ))
-fi
-if [ -f "$LAST_TOGGLE_FILE" ]; then
-  last_ms=$(cat "$LAST_TOGGLE_FILE" 2>/dev/null || echo 0)
-  if [ -n "$last_ms" ] && [ "$last_ms" -ge 0 ] 2>/dev/null; then
-    delta_ms=$((now_ms - last_ms))
-    if [ "$delta_ms" -lt "$MIN_TOGGLE_INTERVAL_MS" ] 2>/dev/null; then
-      if [ "$DEBUG" = true ]; then
-        echo "Toggle debounced (${delta_ms}ms < ${MIN_TOGGLE_INTERVAL_MS}ms)" >&2
+if [ "$STARTUP_MODE" != true ]; then
+  now_ms=""
+  if date +%s%3N >/dev/null 2>&1; then
+    now_ms=$(date +%s%3N)
+  else
+    now_ms=$(( $(date +%s) * 1000 ))
+  fi
+  if [ -f "$LAST_TOGGLE_FILE" ]; then
+    last_ms=$(cat "$LAST_TOGGLE_FILE" 2>/dev/null || echo 0)
+    if [ -n "$last_ms" ] && [ "$last_ms" -ge 0 ] 2>/dev/null; then
+      delta_ms=$((now_ms - last_ms))
+      if [ "$delta_ms" -lt "$MIN_TOGGLE_INTERVAL_MS" ] 2>/dev/null; then
+        if [ "$DEBUG" = true ]; then
+          echo "Toggle debounced (${delta_ms}ms < ${MIN_TOGGLE_INTERVAL_MS}ms)" >&2
+        fi
+        exit 0
       fi
-      exit 0
     fi
   fi
+  echo "$now_ms" >"$LAST_TOGGLE_FILE"
 fi
-echo "$now_ms" >"$LAST_TOGGLE_FILE"
 
 # Debug echo function
 debug_echo() {
@@ -149,10 +171,11 @@ resolve_terminal_address() {
 
 # Validate input
 if [ -z "$TERMINAL_CMD" ]; then
-  echo "Missing terminal command. Usage: $0 [-d] <terminal_command>"
+  echo "Missing terminal command. Usage: $0 [-d|--debug] [--startup|--init] <terminal_command>"
   echo "Examples:"
-  echo "  $0 foot"
-  echo "  $0 -d foot (with debug output)"
+  echo "  $0 kitty"
+  echo "  $0 --startup kitty"
+  echo "  $0 -d kitty (with debug output)"
   echo "  $0 'kitty -e zsh'"
   echo "  $0 'alacritty --working-directory /home/user'"
   echo ""
@@ -359,8 +382,9 @@ calculate_dropdown_position() {
   echo "$final_x $final_y $width $height $mon_name"
 }
 
-# Get the current workspace
-CURRENT_WS=$(hyprctl activeworkspace -j | jq -r '.id')
+get_current_workspace() {
+  hyprctl activeworkspace -j 2>/dev/null | jq -r '.id // empty'
+}
 
 # Function to get stored terminal address
 get_terminal_address() {
@@ -427,6 +451,61 @@ ensure_unpinned() {
     hypr_dispatch pin "address:$addr" >/dev/null 2>&1
   fi
 }
+window_workspace_name() {
+  local addr="$1"
+  hyprctl clients -j 2>/dev/null | jq -r --arg ADDR "$addr" '.[] | select(.address == $ADDR) | .workspace.name // empty'
+}
+
+window_is_on_special_workspace() {
+  local addr="$1"
+  local workspace_name
+  workspace_name=$(window_workspace_name "$addr")
+  [ "$workspace_name" = "$SPECIAL_WS" ] || [ "$workspace_name" = "$SPECIAL_NAME" ]
+}
+
+apply_dropdown_layout() {
+  local addr="$1"
+  local pos_info
+  pos_info=$(calculate_dropdown_position)
+  if [ $? -ne 0 ]; then
+    debug_echo "Warning: Failed to calculate dropdown position, layout update skipped"
+    return 1
+  fi
+
+  local target_x=$(echo "$pos_info" | cut -d' ' -f1)
+  local target_y=$(echo "$pos_info" | cut -d' ' -f2)
+  local width=$(echo "$pos_info" | cut -d' ' -f3)
+  local height=$(echo "$pos_info" | cut -d' ' -f4)
+
+  hypr_dispatch setfloating "address:$addr" >/dev/null 2>&1
+  hypr_dispatch resizewindowpixel "exact $width $height,address:$addr" >/dev/null 2>&1
+  hypr_dispatch movewindowpixel "exact $target_x $target_y,address:$addr" >/dev/null 2>&1
+  return 0
+}
+
+show_terminal() {
+  local addr="$1"
+  local current_ws
+  current_ws=$(get_current_workspace)
+  if [ -z "$current_ws" ]; then
+    current_ws="1"
+  fi
+
+  hypr_dispatch movetoworkspacesilent "$current_ws,address:$addr" >/dev/null 2>&1
+  apply_dropdown_layout "$addr"
+  ensure_pinned "$addr"
+  hypr_dispatch focuswindow "address:$addr" >/dev/null 2>&1
+  set_hidden_state "shown"
+  debug_echo "Dropdown terminal shown on workspace $current_ws"
+}
+
+hide_terminal() {
+  local addr="$1"
+  ensure_unpinned "$addr"
+  hypr_dispatch movetoworkspacesilent "$SPECIAL_WS,address:$addr" >/dev/null 2>&1
+  set_hidden_state "hidden"
+  debug_echo "Dropdown terminal hidden to $SPECIAL_WS"
+}
 
 # Function to spawn terminal and capture its address
 spawn_terminal() {
@@ -486,15 +565,14 @@ spawn_terminal() {
     echo "$new_addr $monitor_name" >"$ADDR_FILE"
     debug_echo "Terminal created with address: $new_addr in special workspace on monitor $monitor_name"
 
-    # Configure while hidden in special workspace, then reveal on the current workspace.
+    # Configure in special workspace and keep hidden until explicitly toggled.
     hypr_dispatch movetoworkspacesilent "$SPECIAL_WS,address:$new_addr"
     sleep 0.05
     hypr_dispatch setfloating "address:$new_addr" >/dev/null 2>&1
-    ensure_pinned "$new_addr"
+    ensure_unpinned "$new_addr"
     hypr_dispatch resizewindowpixel "exact $width $height,address:$new_addr" >/dev/null 2>&1
     hypr_dispatch movewindowpixel "exact $target_x $target_y,address:$new_addr" >/dev/null 2>&1
-    hypr_dispatch movetoworkspacesilent "$CURRENT_WS,address:$new_addr"
-    set_hidden_state "shown"
+    set_hidden_state "hidden"
 
     return 0
   fi
@@ -505,18 +583,26 @@ spawn_terminal() {
 
 # Main logic
 TERMINAL_ADDR=$(resolve_terminal_address)
-
-if [ -n "$TERMINAL_ADDR" ]; then
-  debug_echo "Found existing terminal: $TERMINAL_ADDR; closing it"
-  hypr_exec_cmd "pkill -f 'kitty --class kitty-dropterm'"
-  rm -f "$ADDR_FILE" "$STATE_FILE"
-else
+if [ -z "$TERMINAL_ADDR" ]; then
   debug_echo "No existing terminal found, creating new one"
   if spawn_terminal; then
     TERMINAL_ADDR=$(get_terminal_address)
-    if [ -n "$TERMINAL_ADDR" ]; then
-      hypr_dispatch focuswindow "address:$TERMINAL_ADDR"
-      set_hidden_state "shown"
-    fi
   fi
+fi
+
+if [ -z "$TERMINAL_ADDR" ]; then
+  debug_echo "No dropdown terminal instance is available"
+  exit 1
+fi
+
+if [ "$STARTUP_MODE" = true ]; then
+  debug_echo "Startup mode requested: ensuring dropdown terminal exists and stays hidden"
+  hide_terminal "$TERMINAL_ADDR"
+  exit 0
+fi
+
+if window_is_on_special_workspace "$TERMINAL_ADDR"; then
+  show_terminal "$TERMINAL_ADDR"
+else
+  hide_terminal "$TERMINAL_ADDR"
 fi
