@@ -1083,6 +1083,20 @@ else:
     system_env_lines.append("-- No active env entries were found in configs/ENVariables.conf.")
 write_file(files_out["system_env"], system_env_lines)
 
+startup_readiness = (
+    "runtime=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}; "
+    "export XDG_RUNTIME_DIR=\"$runtime\"; "
+    "for _ in $(seq 1 200); do "
+    "if [ -n \"$WAYLAND_DISPLAY\" ] && [ -S \"$runtime/$WAYLAND_DISPLAY\" ]; then break; fi; "
+    "for sock in \"$runtime\"/wayland-[0-9]*; do [ -S \"$sock\" ] || continue; "
+    "case \"$(basename \"$sock\")\" in *awww*) continue ;; esac; "
+    "export WAYLAND_DISPLAY=\"$(basename \"$sock\")\"; break 2; done; "
+    "sleep 0.1; done; "
+    "if [ -n \"$HYPRLAND_INSTANCE_SIGNATURE\" ]; then "
+    "hypr_sock=\"$runtime/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket.sock\"; "
+    "for _ in $(seq 1 200); do [ -S \"$hypr_sock\" ] && break; sleep 0.1; done; fi"
+)
+
 system_startup_lines = [
     "-- System defaults migrated from configs/Startup_Apps.conf (auto-generated).",
     "-- Add commands with exec_once(\"your command\")",
@@ -1099,7 +1113,7 @@ system_startup_lines = [
     "  local key = cmd:gsub(\"[^%w_.-]\", \"_\"):sub(1, 80)",
     "  local marker = \"/tmp/hypr-lua-system-exec-once-\" .. session .. \"-\" .. key",
     "  local log = \"/tmp/hypr-lua-system-startup-\" .. key .. \".log\"",
-    "  local readiness = \"runtime=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}; export XDG_RUNTIME_DIR=$runtime; if [ -z \\\"$WAYLAND_DISPLAY\\\" ] || [ ! -S \\\"$runtime/$WAYLAND_DISPLAY\\\" ]; then for sock in $runtime/wayland-*; do [ -S \\\"$sock\\\" ] || continue; case \\\"$(basename \\\"$sock\\\")\\\" in *awww*) continue ;; esac; export WAYLAND_DISPLAY=$(basename \\\"$sock\\\"); break; done; fi\"",
+    f"  local readiness = {lua_string(startup_readiness)}",
     "  local inner = readiness .. \"; \" .. cmd",
     "  local script = \"[ -e \" .. shell_quote(marker) .. \" ] || { touch \" .. shell_quote(marker) .. \" && sh -lc \" .. shell_quote(inner) .. \" >>\" .. shell_quote(log) .. \" 2>&1 & }\"",
     "  os.execute(\"sh -lc \" .. shell_quote(script))",
@@ -1126,9 +1140,13 @@ if system_startup_entries:
         "  run_startup_commands()",
         "end",
     ])
+    write_file(files_out["system_startup"], system_startup_lines)
 else:
-    system_startup_lines.append("-- No active startup entries were found in configs/Startup_Apps.conf.")
-write_file(files_out["system_startup"], system_startup_lines)
+    if files_out["system_startup"].exists():
+        print(f"[INFO] No active startup entries found in {system_startup_path}; keeping existing {files_out['system_startup']}")
+    else:
+        system_startup_lines.append("-- No active startup entries were found in configs/Startup_Apps.conf.")
+        write_file(files_out["system_startup"], system_startup_lines)
 
 system_window_lines = [
     "-- System defaults migrated from configs/WindowRules.conf (auto-generated).",
@@ -1343,7 +1361,7 @@ startup_lines = [
     "  local key = cmd:gsub(\"[^%w_.-]\", \"_\"):sub(1, 80)",
     "  local marker = \"/tmp/hypr-lua-user-exec-once-\" .. session .. \"-\" .. key",
     "  local log = \"/tmp/hypr-lua-user-startup-\" .. key .. \".log\"",
-    "  local readiness = \"runtime=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}; export XDG_RUNTIME_DIR=$runtime; if [ -z \\\"$WAYLAND_DISPLAY\\\" ] || [ ! -S \\\"$runtime/$WAYLAND_DISPLAY\\\" ]; then for sock in $runtime/wayland-*; do [ -S \\\"$sock\\\" ] || continue; case \\\"$(basename \\\"$sock\\\")\\\" in *awww*) continue ;; esac; export WAYLAND_DISPLAY=$(basename \\\"$sock\\\"); break; done; fi\"",
+    f"  local readiness = {lua_string(startup_readiness)}",
     "  local inner = readiness .. \"; \" .. cmd",
     "  local script = \"[ -e \" .. shell_quote(marker) .. \" ] || { touch \" .. shell_quote(marker) .. \" && sh -lc \" .. shell_quote(inner) .. \" >>\" .. shell_quote(log) .. \" 2>&1 & }\"",
     "  os.execute(\"sh -lc \" .. shell_quote(script))",
@@ -1370,12 +1388,16 @@ if startup_entries:
         "  run_startup_commands()",
         "end",
     ])
+    write_file(files_out["startup"], startup_lines)
 else:
-    startup_lines.extend([
-        "-- No active startup entries were found in Startup_Apps.conf.",
-        "-- exec_once(\"nm-applet --indicator\")",
-    ])
-write_file(files_out["startup"], startup_lines)
+    if files_out["startup"].exists():
+        print(f"[INFO] No active startup entries found in {startup_path}; keeping existing {files_out['startup']}")
+    else:
+        startup_lines.extend([
+            "-- No active startup entries were found in Startup_Apps.conf.",
+            "-- exec_once(\"nm-applet --indicator\")",
+        ])
+        write_file(files_out["startup"], startup_lines)
 
 window_lines = [
     "-- User window rule overrides (auto-generated).",
