@@ -13,10 +13,40 @@ kitty_config="$HOME/.config/kitty/kitty.conf"
 iDIR="$HOME/.config/swaync/images" # For notifications
 rofi_theme_for_this_script="$HOME/.config/rofi/config-kitty-theme.rasi"
 wallust_refresh_script="$HOME/.config/hypr/scripts/WallustSwww.sh"
+debug_log="${XDG_CACHE_HOME:-$HOME/.cache}/kooldots-kitty-themes.log"
 
 # --- Helper Functions ---
 notify_user() {
   notify-send -u low -i "$1" "$2" "$3"
+}
+
+log_debug() {
+  mkdir -p "$(dirname "$debug_log")" 2>/dev/null || true
+  printf '[%s] %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*" >>"$debug_log" 2>/dev/null || true
+}
+
+resolve_theme_selection() {
+  local rofi_output="$1"
+  local idx
+
+  rofi_output="${rofi_output//$'\r'/}"
+  rofi_output="${rofi_output//$'\n'/}"
+
+  if [[ "$rofi_output" =~ ^[0-9]+$ ]] && [ "$rofi_output" -lt "${#available_theme_names[@]}" ]; then
+    current_selection_index="$rofi_output"
+    theme_to_preview_now="${available_theme_names[$current_selection_index]}"
+    return 0
+  fi
+
+  for idx in "${!available_theme_names[@]}"; do
+    if [[ "${available_theme_names[$idx]}" == "$rofi_output" ]]; then
+      current_selection_index="$idx"
+      theme_to_preview_now="${available_theme_names[$current_selection_index]}"
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 # Function to apply the selected kitty theme
@@ -124,21 +154,22 @@ while true; do
   done
   rofi_input_list_trimmed="${rofi_input_list%\\n}"
 
-  chosen_index_from_rofi=$(echo -e "$rofi_input_list_trimmed" |
+  chosen_selection_from_rofi=$(echo -e "$rofi_input_list_trimmed" |
     rofi -dmenu -i \
+      -no-custom \
       -format 'i' \
       -p "Kitty Theme" \
-      -mesg "Enter: Preview | Ctrl+S: Apply & Exit | Esc: Cancel" \
+      -mesg "Enter: Preview | Ctrl+S (or Alt+1): Apply & Exit | Esc: Cancel" \
       -config "$rofi_theme_for_this_script" \
       -selected-row "$current_selection_index" \
-      -kb-custom-1 "Control+s")
+      -kb-custom-1 "Control+s,Control+S,Alt+1")
 
   rofi_exit_code=$?
+  log_debug "rofi_exit=$rofi_exit_code rofi_output='${chosen_selection_from_rofi}' current_index=$current_selection_index current_theme='${available_theme_names[$current_selection_index]}'"
 
   if [ $rofi_exit_code -eq 0 ]; then
-    if [[ "$chosen_index_from_rofi" =~ ^[0-9]+$ ]] && [ "$chosen_index_from_rofi" -lt "${#available_theme_names[@]}" ]; then
-      current_selection_index="$chosen_index_from_rofi"
-      theme_to_preview_now="${available_theme_names[$current_selection_index]}"
+    if resolve_theme_selection "$chosen_selection_from_rofi"; then
+      log_debug "resolved_enter index=$current_selection_index theme='${theme_to_preview_now}'"
       if [ "$theme_to_preview_now" = "Set by wallpaper" ]; then
         if ! apply_kitty_theme_to_config "$theme_to_preview_now" "apply"; then
           echo "$original_kitty_config_content_backup" >"$kitty_config"
@@ -164,11 +195,9 @@ while true; do
     echo "$original_kitty_config_content_backup" >"$kitty_config"
     for pid_kitty in $(pidof kitty); do if [ -n "$pid_kitty" ]; then kill -SIGUSR1 "$pid_kitty"; fi; done
     break
-  elif [ $rofi_exit_code -eq 10 ]; then # This is the exit code for -kb-custom-1
-    if [[ "$chosen_index_from_rofi" =~ ^[0-9]+$ ]] && [ "$chosen_index_from_rofi" -lt "${#available_theme_names[@]}" ]; then
-      current_selection_index="$chosen_index_from_rofi"
-      theme_to_preview_now="${available_theme_names[$current_selection_index]}"
-    fi
+  elif [ $rofi_exit_code -ge 10 ] && [ $rofi_exit_code -le 28 ]; then # custom keybindings
+    resolve_theme_selection "$chosen_selection_from_rofi" || true
+    log_debug "resolved_custom index=$current_selection_index theme='${theme_to_preview_now}' exit=$rofi_exit_code"
     apply_kitty_theme_to_config "$theme_to_preview_now" "apply"
     notify_user "$iDIR/ja.png" "Kitty Theme Applied" "$theme_to_preview_now"
     break
