@@ -12,6 +12,7 @@ kitty_themes_DiR="$HOME/.config/kitty/kitty-themes" # Kitty Themes Directory
 kitty_config="$HOME/.config/kitty/kitty.conf"
 iDIR="$HOME/.config/swaync/images" # For notifications
 rofi_theme_for_this_script="$HOME/.config/rofi/config-kitty-theme.rasi"
+wallust_refresh_script="$HOME/.config/hypr/scripts/WallustSwww.sh"
 
 # --- Helper Functions ---
 notify_user() {
@@ -58,6 +59,9 @@ apply_kitty_theme_to_config() {
 
   cp "$temp_kitty_config_file" "$kitty_config"
   rm "$temp_kitty_config_file"
+  if [ "$theme_name_to_apply" = "Set by wallpaper" ] && [ -x "$wallust_refresh_script" ]; then
+    "$wallust_refresh_script" >/dev/null 2>&1 || true
+  fi
   if pidof kitty >/dev/null 2>&1; then
     if [ "$apply_mode" = "apply" ] && command -v kitty >/dev/null 2>&1; then
       kitty @ load-config >/dev/null 2>&1
@@ -110,6 +114,7 @@ if [ -n "$current_active_theme_name" ]; then
     fi
   done
 fi
+theme_to_preview_now="${available_theme_names[$current_selection_index]}"
 
 while true; do
 
@@ -134,6 +139,16 @@ while true; do
     if [[ "$chosen_index_from_rofi" =~ ^[0-9]+$ ]] && [ "$chosen_index_from_rofi" -lt "${#available_theme_names[@]}" ]; then
       current_selection_index="$chosen_index_from_rofi"
       theme_to_preview_now="${available_theme_names[$current_selection_index]}"
+      if [ "$theme_to_preview_now" = "Set by wallpaper" ]; then
+        if ! apply_kitty_theme_to_config "$theme_to_preview_now" "apply"; then
+          echo "$original_kitty_config_content_backup" >"$kitty_config"
+          for pid_kitty in $(pidof kitty); do if [ -n "$pid_kitty" ]; then kill -SIGUSR1 "$pid_kitty"; fi; done
+          notify_user "$iDIR/error.png" "Wallpaper Mode Error" "Failed to enable Set by wallpaper. Reverted."
+          exit 1
+        fi
+        notify_user "$iDIR/ja.png" "Kitty Theme Applied" "$theme_to_preview_now"
+        break
+      fi
       if ! apply_kitty_theme_to_config "$theme_to_preview_now" "preview"; then
         echo "$original_kitty_config_content_backup" >"$kitty_config"
         for pid_kitty in $(pidof kitty); do if [ -n "$pid_kitty" ]; then kill -SIGUSR1 "$pid_kitty"; fi; done
@@ -150,6 +165,10 @@ while true; do
     for pid_kitty in $(pidof kitty); do if [ -n "$pid_kitty" ]; then kill -SIGUSR1 "$pid_kitty"; fi; done
     break
   elif [ $rofi_exit_code -eq 10 ]; then # This is the exit code for -kb-custom-1
+    if [[ "$chosen_index_from_rofi" =~ ^[0-9]+$ ]] && [ "$chosen_index_from_rofi" -lt "${#available_theme_names[@]}" ]; then
+      current_selection_index="$chosen_index_from_rofi"
+      theme_to_preview_now="${available_theme_names[$current_selection_index]}"
+    fi
     apply_kitty_theme_to_config "$theme_to_preview_now" "apply"
     notify_user "$iDIR/ja.png" "Kitty Theme Applied" "$theme_to_preview_now"
     break

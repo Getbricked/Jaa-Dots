@@ -165,12 +165,14 @@ run_wallust_with_config() {
     wallust "${wallust_kitty_args[@]}" run -s "$wallpaper_path" || true
     return
   fi
-  # Wallust v3: try -c, fall back to env var
-  if wallust run --help 2>&1 | grep -q -E '(^|[[:space:]])-c([,[:space:]]|$)|--config'; then
-    wallust run -s -c "$cfg" "$wallpaper_path" || true
-  else
-    WALLUST_CONFIG="$cfg" wallust run -s "$wallpaper_path" || true
+  # Wallust v3+: prefer config-file flag when available.
+  # NOTE: Do not use -c here; on wallust 3.x it means colorspace, not config file.
+  if wallust run --help 2>&1 | grep -q -E -- '(^|[[:space:]])-C([,[:space:]]|$)|--config-file'; then
+    wallust run -s -C "$cfg" "$wallpaper_path" || true
+    return
   fi
+  # Legacy fallback for builds that still honor env-based config override.
+  WALLUST_CONFIG="$cfg" wallust run -s "$wallpaper_path" || true
 }
 wallust_hypr_colors="$HOME/.config/hypr/wallust/wallust-hyprland.conf"
 extract_wallust_hex() {
