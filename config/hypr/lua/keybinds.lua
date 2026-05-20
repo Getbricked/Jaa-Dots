@@ -449,20 +449,20 @@ bind(
 bind(
   "SUPER SHIFT",
   "left",
-  window_api.resize({ x = -50, y = 0, relative = true }),
+  dispatch("resizeactive", "-50 0"),
   { description = "resize left (-50)" }
 )
 bind(
   "SUPER SHIFT",
   "right",
-  window_api.resize({ x = 50, y = 0, relative = true }),
+  dispatch("resizeactive", "50 0"),
   { description = "resize right (+50)" }
 )
-bind("SUPER SHIFT", "up", window_api.resize({ x = 0, y = -50, relative = true }), { description = "resize up (-50)" })
+bind("SUPER SHIFT", "up", dispatch("resizeactive", "0 -50"), { description = "resize up (-50)" })
 bind(
   "SUPER SHIFT",
   "down",
-  window_api.resize({ x = 0, y = 50, relative = true }),
+  dispatch("resizeactive", "0 50"),
   { description = "resize down (+50)" }
 )
 -- Keep legacy directional move script binds commented for rollback during Lua API migration.
