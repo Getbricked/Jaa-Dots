@@ -53,12 +53,14 @@ resolve_theme_selection() {
 apply_kitty_theme_to_config() {
   local theme_name_to_apply="$1"
   local apply_mode="${2:-preview}"
+  local is_wallpaper_mode=0
   if [ -z "$theme_name_to_apply" ]; then
     echo "Error: No theme name provided to apply_kitty_theme_to_config." >&2
     return 1
   fi
   local theme_file_path_to_apply
   if [ "$theme_name_to_apply" = "Set by wallpaper" ]; then
+    is_wallpaper_mode=1
     theme_file_path_to_apply="$kitty_themes_DiR/01-Wallust.conf"
   elif [ "$theme_name_to_apply" = "Default no color" ]; then
     theme_file_path_to_apply="$kitty_themes_DiR/00-Default.conf"
@@ -89,13 +91,20 @@ apply_kitty_theme_to_config() {
 
   cp "$temp_kitty_config_file" "$kitty_config"
   rm "$temp_kitty_config_file"
+  local trigger_wallust_refresh=0
   if [ "$theme_name_to_apply" = "Set by wallpaper" ] && [ -x "$wallust_refresh_script" ]; then
-    "$wallust_refresh_script" >/dev/null 2>&1 || true
+    trigger_wallust_refresh=1
+  fi
+  if [ "$trigger_wallust_refresh" -eq 1 ]; then
+    "$wallust_refresh_script" >/dev/null 2>&1 &
+    log_debug "wallust_refresh_background_started"
   fi
   if pidof kitty >/dev/null 2>&1; then
-    if [ "$apply_mode" = "apply" ] && command -v kitty >/dev/null 2>&1; then
-      kitty @ load-config >/dev/null 2>&1
-      kitty @ set-colors --all --configured "$theme_file_path_to_apply" >/dev/null 2>&1
+    if [ "$apply_mode" = "apply" ] && [ "$is_wallpaper_mode" -eq 0 ] && command -v kitty >/dev/null 2>&1; then
+      (
+        kitty @ load-config >/dev/null 2>&1 || true
+        kitty @ set-colors --all --configured "$theme_file_path_to_apply" >/dev/null 2>&1 || true
+      ) &
     fi
     for pid_kitty in $(pidof kitty); do
       if [ -n "$pid_kitty" ]; then
@@ -170,16 +179,6 @@ while true; do
   if [ $rofi_exit_code -eq 0 ]; then
     if resolve_theme_selection "$chosen_selection_from_rofi"; then
       log_debug "resolved_enter index=$current_selection_index theme='${theme_to_preview_now}'"
-      if [ "$theme_to_preview_now" = "Set by wallpaper" ]; then
-        if ! apply_kitty_theme_to_config "$theme_to_preview_now" "apply"; then
-          echo "$original_kitty_config_content_backup" >"$kitty_config"
-          for pid_kitty in $(pidof kitty); do if [ -n "$pid_kitty" ]; then kill -SIGUSR1 "$pid_kitty"; fi; done
-          notify_user "$iDIR/error.png" "Wallpaper Mode Error" "Failed to enable Set by wallpaper. Reverted."
-          exit 1
-        fi
-        notify_user "$iDIR/ja.png" "Kitty Theme Applied" "$theme_to_preview_now"
-        break
-      fi
       if ! apply_kitty_theme_to_config "$theme_to_preview_now" "preview"; then
         echo "$original_kitty_config_content_backup" >"$kitty_config"
         for pid_kitty in $(pidof kitty); do if [ -n "$pid_kitty" ]; then kill -SIGUSR1 "$pid_kitty"; fi; done
