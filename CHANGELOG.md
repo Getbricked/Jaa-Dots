@@ -2,61 +2,68 @@
 
 ## v2.3.24
 
-- Fixed: `scrpts/migrate-hypr-to-lua.sh`
+## Fixed:
+
+- `scrpts/migrate-hypr-to-lua.sh`
   - It didn't convert `monitors.conf` nor `workspaces.conf`
   - Impropved summary to show converted and what's left native
     - I.e. `hyprlock.conf` and `hypridle.conf` still use `.conf`
-- Fixed `DropDownterminal` adding lua support broke legacy hyprlang
-  - Part Duex: Fixed the fix to work in lua workflow
+- `DropDownterminal` adding lua support broke legacy hyprlang
+  - Part Dos: Fixed the fix to work in lua workflow
+  - Part Tres: `DropDownterminal.sh` exited on hide not persisted
+- logout keybinding and logout from menu not working in LUA config
+- logic issue in migration script
 - Updated description for logout/exit keybinding
   - It only said `exit` if you search for `logout` nothing is returned
-- Fixed logout keybinding and logout from menu not working in LUA config
-- Fixed logic issue in migration script
 - Improved migration process to properly backup and move the .lua files
   - `/.config/hypr/lua` are the pristine source files
   - Migration script will convert the .conf files to .lua
     - Them move the system configs to `.config/hypr/configs`
     - Then move thhe user configs to `.config/hypr/UserConfigs`
     - Preserving user changes on subsquent updates
-- Updated migration script to make/keep proper Window Rule names
-- Found LUA function to handle lid switch to enable/disable laptop display
-  - Thank you `@star` on `TheBlackDons` Discord Server
-- Add `.luarc.jsonc` and `hl.meta.lua` (Thank you @Tony,btw) for the latter
-  - This will get rid of `function not defined` errors in Editor LSP's that support LUA
-  - And provide fuction info as well with properly configured editors
-- Added support for `$VISUAL` editor
-  - Setting the env variable to your GUI editor will override `$EDITOR`
-  - You can use `neovide`, `code/codium`. `geany`, `emacs` etc
-  - Providing a richer environment, and faster.
-- Enhanced `ExternalBrightness.sh`
-  - Taken from code modified by `@RAH-iĐ905`
-  - Discovers montiors, and LUA compatible
-- Fixed `JavaManger.sh` field width cut off JDK version
-- Fixed `Tak0-Autodispatch.sh`
+- `JavaManger.sh` field width cut off JDK version
+- `Tak0-Autodispatch.sh`
   - Reworked code to support LUA config
-- Fixed `Tak0-Per-Window-Switch.sh`
+- `Tak0-Per-Window-Switch.sh`
   - Had syntax error
   - Added support for both Hyprlang and LUA configs
-- Fixed incorrect XDGDATA dirs for flatpak
-  - Updated `ENVariables.conf` and `env.lua`
-- Updated keybind description for `hyprsunset` to include `hyprsunset`
-  - Makes it easier to find in keybind search tool
-- Fixed `Gamemode.sh`
+- Incorrect XDGDATA dirs for flatpak
+- `Gamemode.sh`
   - It supports both HYPRLANG and LUA configs
-- Fixed `Float-all-windows.sh`
+- `Float-all-windows.sh`
   - It works with HYPRLANG and LUA
-- Started making Wallust code support v4.0
-  - `wallust v4.0.0` isn't backward compatible
-  - There seem to be more options but the color palletes are worse IMO
-  - Suggest current users ping wallust to v3.5.2
-- Enhanced `OverviewToggle.sh` handling of quickshell vs. ags
-- Fixed `MonitorProfiles.sh` script to work with LUA or HYPRLANG
+- `MonitorProfiles.sh` script to work with LUA or HYPRLANG
   - Added additional profiles also
     - Virtual-1 1920x1080
     - Virtual-1 2560x1080
     - HDMI-A-1 High Refresh Rate
     - eDP-1 disable
-- Fixed legacy import of `UserKeybinds.conf`
+- Legacy import of `UserKeybinds.conf`
+- `Toggle-Active-Windown-Audio` script to work with LUA workflow
+- `layerrules` made menus look terrible
+- `OverviewToggle.sh` handling of quickshell vs. ags
+
+## Updated:
+
+- `ENVariables.conf` and `env.lua`
+- migration script to make/keep proper Window Rule names
+- LUA function to handle lid switch to enable/disable laptop display
+- Thank you `@star` on `TheBlackDons` Discord Server
+- keybind description for `hyprsunset` to include `hyprsunset`
+  - Makes it easier to find in keybind search tool
+- `ExternalBrightness.sh`
+  - Taken from code modified by `@RAH-iĐ905`
+  - Discovers montiors, and LUA compatible
+
+## Added:
+
+- `.luarc.jsonc` and `hl.meta.lua` (Thank you @Tony,btw) for the latter
+- This will get rid of `function not defined` errors in Editor LSP's that support LUA
+- And provide fuction info as well with properly configured editors
+- support for `$VISUAL` editor
+- Setting the env variable to your GUI editor will override `$EDITOR`
+- You can use `neovide`, `code/codium`. `geany`, `emacs` etc
+- Providing a richer environment, and faster.
 - Created a `keybind_helpers.lua` file
   - Moved all the helper functions which should need to be edited
   - This cleans up the `keybinds.lua` file to be more user friendly, easier editing
@@ -71,31 +78,44 @@
   - Window resize/move/swap/grouping
   - Workspace navigation/assignment
   - Mouse drag/resize bindings
+- `Javamanger.sh`
+  - Manage Java runtime instances
+  - 1st pass, only tested for Arch
+    - Added code for other distros, needs testing
+- helper script `logout.sh` to call `hyprshutdown`
+  - Added pkill `waybar`, `awww-daemon`, and `swww-daemon` before `hyprshutdown`
+- menu option for `LayerRules` in Quick settings menu
 
-- Fixed `Toggle-Active-Windown-Audio` script to work with LUA workflow
-- Fixed `layerrules` made menus look terrible
-- Removed "-config-v3.conf" files for
+## Removed:
+
+- "-config-v3.conf" files for
   - `WindowRules.conf/lua`
   - `LayerRules.conf/lua`
     - They are no longer needed
-- Added helper script `logout.sh` to call `hyprshutdown`
-  - Added pkill `waybar`, `awww-daemon`, and `swww-daemon` before `hyprshutdown`
-- Moved layer rules to own file `LayerRules.conf`
-  - Added additional rules from `TheAhumMaitra`
-  - Updated LUA config accordingly
-  - Added menu option for LayerRules in quicksettings
+- Hard-coded rofi terminal overrides in theme configs
+  - `themes/KooL_dwm.rasi`
+  - `dwm-config-horiz.rasi`
+  - `dwm-config-vert.rasi`
+- Thanks to [@TeaJhay](https://github.com/TeaJhay) for finding this
+
+## Misc:
+
+- Started planning changes to Wallust code to support v4.0
+- `wallust v4.0.0` isn't backward compatible
+- There seem to be more options but the color palletes are worse IMO
+- Suggest current users ping wallust to v3.5.2
+
+## Lua migration related:
+
 - Improved move/resize and window swapping using native calls
   - Thanks to `TheAhumMaitra`
     - His LUA code is better than mine
     - I will probably be "borrowing" more ;)
     - https://github.com/TheAhumMaitra/Aurora
     - https://github.com/TheAhumMaitra
-- Created new development branch
-- Removed hard-coded rofi terminal overrides in theme configs
-  - `themes/KooL_dwm.rasi`
-  - `dwm-config-horiz.rasi`
-  - `dwm-config-vert.rasi`
-- Thanks to [@TeaJhay](https://github.com/TeaJhay) for finding this
+- Moved layer rules to own file `LayerRules.conf`
+  - Added additional rules from `TheAhumMaitra`
+  - Updated LUA config accordingly
 - Began Migration process to LUA
   - Created `scripts/migrate-hypr-to-lua.sh`
   - Script converts `configs` and `UserConfigs` to LUA
@@ -105,15 +125,11 @@
 - Broke out the `hypr/configs` and `hypr/UserConfig` LUA files
 - Added project header to all .LUA files
 - Migration script will add that to the converted .conf files as well
-- Updted keybinds parser to support LUA
+- Updated keybinds parser to support LUA
 - Fixed resize by keybind, SUPERSHIFT= + Arrow keys
 - Then modified that script to support mouse resize
   - SUPER + Left Mouse to move
   - SUPER + Right Mouse to resize
-- Added `Javamanger.sh`
-  - Manage Java runtime instances
-  - 1st pass, only tested for Arch
-    - Added code for other distros, needs testing
 
 ## v2.3.23
 
