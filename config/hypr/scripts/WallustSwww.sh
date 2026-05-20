@@ -172,6 +172,54 @@ run_wallust_with_config() {
     WALLUST_CONFIG="$cfg" wallust run -s "$wallpaper_path" || true
   fi
 }
+wallust_hypr_colors="$HOME/.config/hypr/wallust/wallust-hyprland.conf"
+extract_wallust_hex() {
+  local key="$1"
+  awk -v key="$key" '
+    $1 == "$" key && $2 == "=" {
+      if (match($3, /^rgb\(([0-9A-Fa-f]{6})\)$/, m)) {
+        print toupper(m[1])
+        exit
+      }
+    }
+  ' "$wallust_hypr_colors"
+}
+
+apply_hypr_border_fallback() {
+  [ -s "$wallust_hypr_colors" ] || return 0
+  local color12 color10 color15 color0
+  color12="$(extract_wallust_hex color12)"
+  color10="$(extract_wallust_hex color10)"
+  color15="$(extract_wallust_hex color15)"
+  color0="$(extract_wallust_hex color0)"
+
+  [ -n "$color12" ] && hyprctl keyword general:col.active_border "rgb($color12)" >/dev/null 2>&1 || true
+  [ -n "$color10" ] && hyprctl keyword general:col.inactive_border "rgb($color10)" >/dev/null 2>&1 || true
+  [ -n "$color12" ] && hyprctl keyword decoration:shadow:color "rgb($color12)" >/dev/null 2>&1 || true
+  [ -n "$color10" ] && hyprctl keyword decoration:shadow:color_inactive "rgb($color10)" >/dev/null 2>&1 || true
+  [ -n "$color15" ] && hyprctl keyword group:col.border_active "rgb($color15)" >/dev/null 2>&1 || true
+  [ -n "$color0" ] && hyprctl keyword group:groupbar:col.active "rgb($color0)" >/dev/null 2>&1 || true
+}
+
+apply_hypr_gap_fallback() {
+  local decorations_lua="$HOME/.config/hypr/UserConfigs/user_decorations.lua"
+  [ -s "$decorations_lua" ] || return 0
+  local gaps_in gaps_out border_size
+  gaps_in="$(sed -n 's/^[[:space:]]*gaps_in[[:space:]]*=[[:space:]]*\([0-9]\+\).*/\1/p' "$decorations_lua" | head -n1)"
+  gaps_out="$(sed -n 's/^[[:space:]]*gaps_out[[:space:]]*=[[:space:]]*\([0-9]\+\).*/\1/p' "$decorations_lua" | head -n1)"
+  border_size="$(sed -n 's/^[[:space:]]*border_size[[:space:]]*=[[:space:]]*\([0-9]\+\).*/\1/p' "$decorations_lua" | head -n1)"
+
+  [ -n "$gaps_in" ] && hyprctl keyword general:gaps_in "$gaps_in" >/dev/null 2>&1 || true
+  [ -n "$gaps_out" ] && hyprctl keyword general:gaps_out "$gaps_out" >/dev/null 2>&1 || true
+  [ -n "$border_size" ] && hyprctl keyword general:border_size "$border_size" >/dev/null 2>&1 || true
+}
+
+# Apply Hyprland updates immediately to avoid delayed border/gap changes.
+if command -v hyprctl >/dev/null 2>&1; then
+  hyprctl reload >/dev/null 2>&1 || true
+  apply_hypr_border_fallback || true
+  apply_hypr_gap_fallback || true
+fi
 
 kitty_cfg="$HOME/.config/wallust/wallust-kitty.toml"
 if [ "${#wallust_kitty_args[@]}" -gt 0 ]; then
@@ -211,8 +259,5 @@ fi
   if pidof ghostty >/dev/null; then
     for pid in $(pidof ghostty); do kill -SIGUSR2 "$pid" 2>/dev/null || true; done
   fi
-  # Reload Hyprland so new border colors from wallust-hyprland.conf take effect
-  if command -v hyprctl >/dev/null 2>&1; then
-    hyprctl reload >/dev/null 2>&1 || true
-  fi
+  # Hyprland reload/keyword updates are applied above to avoid delayed color/gap updates.
 ) >/dev/null 2>&1 &
