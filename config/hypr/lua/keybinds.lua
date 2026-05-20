@@ -83,6 +83,7 @@ local app_binds = {
     "rofi theme selector (modified)",
   },
   { "SUPER CTRL", "K", "$HOME/.config/hypr/scripts/Kitty_themes.sh", "Kitty theme selector" },
+  { "SUPER CTRL", "G", "$HOME/.config/hypr/scripts/Ghostty_themes.sh", "Ghostty theme selector" },
   {
     "SUPER SHIFT",
     "B",

@@ -4,10 +4,13 @@
 
 ## Fixed:
 
-- Duplicate import of keybinds 
-  - was reading ``lua/keybinds.lua`` and `UserConfigs/configs` 
-  - Udpated `Kool_Quick_Settings.sh`  
-    - Only reads  `configs` and `UserConfigs` dirs
+- Migrate-hypr-to-lua to lua script
+  - Wasn't properly handling variables list `$scriptDir`
+- Sourcing of `UserConfig/user_keybinds.lua`
+- Duplicate import of keybinds
+  - was reading `lua/keybinds.lua` and `UserConfigs/configs`
+  - Udpated `Kool_Quick_Settings.sh`
+    - Only reads `configs` and `UserConfigs` dirs
 - MonitorProfile for `eDP-1-disable.lua` incorrect
   - Changed to `disable = true`
 - `copy.sh`
@@ -68,6 +71,8 @@
 
 ## Added:
 
+- `SUPERCTRL + G` for ghostty theme selector
+- Kitty theme selector to `Kool_Quick_Settings` to match entry for ghostty
 - `.luarc.jsonc` and `hl.meta.lua` (Thank you @Tony,btw) for the latter
 - This will get rid of `function not defined` errors in Editor LSP's that support LUA
 - And provide fuction info as well with properly configured editors

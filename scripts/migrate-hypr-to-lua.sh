@@ -396,17 +396,56 @@ def parse_env(path):
             entries.append((match.group(1).strip(), match.group(2).strip()))
     return entries
 
-def parse_startup(path):
+def parse_startup(path, *, variables=None, visited=None):
     entries = []
     if not path.exists():
         return entries
+
+    if variables is None:
+        variables = {}
+    if visited is None:
+        visited = set()
+
+    try:
+        resolved = path.resolve()
+    except FileNotFoundError:
+        resolved = path
+
+    if resolved in visited:
+        return []
+    visited.add(resolved)
+
+    def expand(value):
+        for _ in range(8):
+            new_value = value
+            for name, var_value in variables.items():
+                new_value = new_value.replace(f"${name}", var_value)
+            if new_value == value:
+                break
+            value = new_value
+        return os.path.expandvars(value)
+
     for raw in path.read_text(encoding="utf-8", errors="ignore").splitlines():
         line = strip_comment(raw)
         if not line:
             continue
+
+        source_match = re.match(r"^source\s*=\s*(.+)$", line)
+        if source_match:
+            source_value = expand(source_match.group(1).strip())
+            source_path = Path(source_value).expanduser()
+            entries.extend(parse_startup(source_path, variables=variables, visited=visited))
+            continue
+
+        variable = re.match(r"^\$([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)$", line)
+        if variable:
+            variables[variable.group(1)] = expand(variable.group(2).strip())
+            continue
+
         match = re.match(r"^exec(?:-once)?\s*=\s*(.+)$", line)
         if match:
-            entries.append(match.group(1).strip())
+            entries.append(expand(match.group(1).strip()))
+
     return entries
 
 MONITOR_DIRECTIVE_KEYS = {
@@ -975,8 +1014,8 @@ system_keybinds = parse_keybinds(system_keybinds_path, variables=dict(base_keybi
 keybinds = parse_keybinds(keybinds_path, variables=dict(base_keybind_vars))
 system_env_entries = parse_env(system_env_path)
 env_entries = parse_env(env_path)
-system_startup_entries = parse_startup(system_startup_path)
-startup_entries = parse_startup(startup_path)
+system_startup_entries = parse_startup(system_startup_path, variables=dict(base_keybind_vars))
+startup_entries = parse_startup(startup_path, variables=dict(base_keybind_vars))
 monitor_entries = parse_monitors(monitors_conf_path)
 workspace_entries = parse_workspaces(workspaces_conf_path)
 parsed_user_defaults = parse_user_defaults(user_defaults_path)
@@ -1524,6 +1563,7 @@ for _, file in ipairs(system_files) do
     load_optional(legacy)
   end
 end
+local loaded_user_split = false
 
 local user_files = {
   "user_env.lua",
@@ -1535,11 +1575,15 @@ local user_files = {
   "user_decorations.lua",
   "user_animations.lua",
   "user_laptops.lua",
-  "user_overrides.lua", -- backward compatibility with older single-file overrides
 }
 for _, file in ipairs(user_files) do
   local path = userDir .. "/" .. file
-  load_optional(path)
+  if load_optional(path) then
+    loaded_user_split = true
+  end
+end
+if not loaded_user_split then
+  load_optional(userDir .. "/user_overrides.lua") -- backward compatibility with older single-file overrides
 end
 LUA
 
