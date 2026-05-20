@@ -4,6 +4,8 @@
 
 ## Fixed:
 
+- MonitorProfile for `eDP-1-disable.lua` incorrect
+  - Changed to `disable = true`
 - `copy.sh`
   - Didn't handle `hyprland.lua` properly
   - Re-copied `*.conf` files when LUA enabled
