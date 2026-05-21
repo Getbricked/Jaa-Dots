@@ -300,7 +300,11 @@ local function bindm(mods, key, dispatcher, description)
   if dispatcher == "movewindow" and window_api.drag then
     action = window_api.drag()
   elseif dispatcher == "resizewindow" then
-    action = raw_dispatch_cmd("resizewindow")
+    if window_api.resize then
+      action = window_api.resize()
+    else
+      action = raw_dispatch_cmd("resizewindow")
+    end
   else
     action = raw_dispatch_cmd(dispatcher)
   end
