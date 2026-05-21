@@ -62,6 +62,12 @@
 
 ## Updated:
 
+- Created `user_keybinds_helper.lua`
+  - The removes the basic setup for user keybinds
+  - The generated `user_keybinds.lua` now only has the bindings config
+  - Removing all the setup code, functions, makes editing easier
+  - Also any updates to the user keybind code is done outside of `UserConfigs`
+    - which is preserved on updates
 - `ENVariables.conf` and `env.lua`
 - migration script to make/keep proper Window Rule names
 - LUA function to handle lid switch to enable/disable laptop display
