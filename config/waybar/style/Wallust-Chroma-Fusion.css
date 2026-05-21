@@ -218,7 +218,8 @@ tooltip {
 #workspaces button {
     margin: 1px 1px;
     border-radius: 15px;
-    border:0px;
+    border: 1px solid transparent;
+    background: transparent;
     color: @color15;
     padding-left: 2px;
     padding-right: 2px;
@@ -229,8 +230,9 @@ tooltip {
 
 #taskbar button.active,
 #workspaces button.active {
-    color: #FFFFFF;
-    background: @button-color;
+    color: @color0;
+    background: @color12;
+    border: 1px solid @color15;
     border-radius: 15px;
     padding-left: 4px;
     padding-right: 4px;
@@ -246,8 +248,9 @@ tooltip {
 
 #taskbar button:hover,
 #workspaces button:hover {
-    color: #FFFFFF;
-    background: @button-hover;
+    color: @color0;
+    background: @color11;
+    border: 1px solid @color15;
     border-radius: 15px;
     opacity:1.0;
     padding-left: 2px;

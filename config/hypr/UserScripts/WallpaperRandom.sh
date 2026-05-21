@@ -36,9 +36,12 @@ fi
 "$WWW_CMD" img -o "$focused_monitor" "$RANDOMPICS" $SWWW_PARAMS
 
 wait $!
-"$SCRIPTSDIR/WallustSwww.sh" "$RANDOMPICS" &&
+if ! "$SCRIPTSDIR/WallustSwww.sh" "$RANDOMPICS"; then
+  notify-send -u critical "Wallust failed" "Wallpaper theme not refreshed"
+  exit 1
+fi
 
 wait $!
-sleep 2
+sleep 0.5
 "$SCRIPTSDIR/Refresh.sh"
 

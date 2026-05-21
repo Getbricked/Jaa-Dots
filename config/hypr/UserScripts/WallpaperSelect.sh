@@ -185,10 +185,13 @@ apply_image_wallpaper() {
   cp -f "$image_path" "$per_monitor_wallpaper_current" || true
 
   # Run additional scripts (pass the image path to avoid cache race conditions)
-  "$SCRIPTSDIR/WallustSwww.sh" "$image_path"
-  sleep 2
+  if ! "$SCRIPTSDIR/WallustSwww.sh" "$image_path"; then
+    notify-send -i "$iDIR/error.png" "Wallust failed" "Wallpaper theme not refreshed"
+    return 1
+  fi
+  sleep 0.5
   "$SCRIPTSDIR/Refresh.sh"
-  sleep 1
+  sleep 0.3
 
 }
 

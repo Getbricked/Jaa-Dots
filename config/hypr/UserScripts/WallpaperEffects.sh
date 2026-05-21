@@ -66,10 +66,13 @@ declare -A effects=(
 no-effects() {
     $WWW img -o "$focused_monitor" "$wallpaper_current" $SWWW_PARAMS &&
     wait $!
-    wallust "${wallust_args[@]}" run -s "$wallpaper_current" &&
+    if ! wallust "${wallust_args[@]}" run -s "$wallpaper_current"; then
+        notify-send -u critical -i "$iDIR/error.png" "Wallust failed" "Wallpaper theme not refreshed"
+        return 1
+    fi
     wait $!
     # Refresh rofi, waybar, wallust palettes
-	sleep 2
+	sleep 0.5
 	"$SCRIPTSDIR/Refresh.sh"
 
     notify-send -u low -i "$iDIR/ja.png" "No wallpaper" "effects applied"
@@ -109,6 +112,10 @@ main() {
             wallust "${wallust_args[@]}" run -s "$wallpaper_output" &
             sleep 1
             # Refresh rofi, waybar, wallust palettes
+            if ! wait %1; then
+                notify-send -u critical -i "$iDIR/error.png" "Wallust failed" "Wallpaper theme not refreshed"
+                return 1
+            fi
             "${SCRIPTSDIR}/Refresh.sh"
             notify-send -u low -i "$iDIR/ja.png" "$choice" "effects applied"
         else

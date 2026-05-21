@@ -16,6 +16,31 @@ wallust_kitty_args=()
 if [ -f "$HOME/.config/hypr/scripts/WallustConfig.sh" ]; then
   . "$HOME/.config/hypr/scripts/WallustConfig.sh"
 fi
+have_notify() { command -v notify-send >/dev/null 2>&1; }
+wallust_log="${XDG_CACHE_HOME:-$HOME/.cache}/wallust/wallust-swww.log"
+mkdir -p "$(dirname "$wallust_log")"
+ensure_wallust_waybar_style() {
+  local waybar_style="$HOME/.config/waybar/style.css"
+  local colors_file="$HOME/.config/waybar/wallust/colors-waybar.css"
+  local styles_dir="$HOME/.config/waybar/style"
+  [ -f "$colors_file" ] || return 0
+  if [ -f "$waybar_style" ] && grep -q 'colors-waybar.css' "$waybar_style"; then
+    return 0
+  fi
+  local candidates=(
+    "Wallust-Chroma-Fusion.css"
+    "Wallust-ML4W-modern.css"
+    "Wallust-Colored.css"
+    "Wallust-Box-type.css"
+    "Wallust-Simple.css"
+  )
+  for candidate in "${candidates[@]}"; do
+    if [ -f "$styles_dir/$candidate" ]; then
+      ln -sf "$styles_dir/$candidate" "$waybar_style"
+      break
+    fi
+  done
+}
 
 # Inputs and paths
 passed_path="${1:-}"
@@ -131,13 +156,22 @@ wait_for_templates() {
 # Run wallust (silent) to regenerate templates defined in ~/.config/wallust/wallust.toml
 # -s is used in this repo to keep things quiet and avoid extra prompts
 start_ts=$(date +%s)
-wallust "${wallust_args[@]}" run -s "$wallpaper_path" || true
+if ! wallust "${wallust_args[@]}" run -s "$wallpaper_path" >"$wallust_log" 2>&1; then
+  have_notify && notify-send -u critical -a WallustSwww \
+    "Wallust failed" "See: $wallust_log"
+  exit 1
+fi
 wallust_targets=(
   "$HOME/.config/waybar/wallust/colors-waybar.css"
   "$HOME/.config/rofi/wallust/colors-rofi.rasi"
   "$HOME/.config/hypr/wallust/wallust-hyprland.conf"
 )
-wait_for_templates "$start_ts" "${wallust_targets[@]}" || true
+if ! wait_for_templates "$start_ts" "${wallust_targets[@]}"; then
+  have_notify && notify-send -u critical -a WallustSwww \
+    "Wallust templates not updated" "See: $wallust_log"
+  exit 1
+fi
+ensure_wallust_waybar_style
 
 # Normalize Rofi selection colors to a brighter accent and readable foreground
 rofi_colors="$HOME/.config/rofi/wallust/colors-rofi.rasi"
@@ -218,9 +252,7 @@ apply_hypr_gap_fallback() {
 
 # Apply Hyprland updates immediately to avoid delayed border/gap changes.
 if command -v hyprctl >/dev/null 2>&1; then
-  hyprctl reload >/dev/null 2>&1 || true
-  apply_hypr_border_fallback || true
-  apply_hypr_gap_fallback || true
+  hyprctl reload config-only >/dev/null 2>&1 || true
 fi
 
 kitty_cfg="$HOME/.config/wallust/wallust-kitty.toml"

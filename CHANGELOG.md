@@ -4,6 +4,10 @@
 
 ## Fixed:
 
+- Theme by wallpaper and global theme
+  - Neither were updating waybar nor border colors
+  - Adjusted colors on style sheet `Wallust-Chrome-Fustion.css`
+    - Current workspace showed as single color blob
 - Migrate-hypr-to-lua to lua script
   - Wasn't properly handling variables list `$scriptDir`
 - Sourcing of `UserConfig/user_keybinds.lua`
