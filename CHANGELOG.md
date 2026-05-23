@@ -4,6 +4,10 @@
 
 ## Fixed:
 
+- Logout is NixOS. 
+   - Added fallback if hyprshutdown not installed or fails 
+   - Fixed pathing issues where not all logout options used`Logout.sh`
+- Removed sleep statments from startup to trim login time 
 - Network icon on waybar invisible
   - Changed the CSS files it's better but should revisit it
 - NixOS waybar issues:

@@ -33,8 +33,8 @@ end
 -- Prefer lifecycle-hook orchestration for clarity while keeping exec_once
 -- reliability semantics for real-world startup behavior.
 local startup_commands = {
+  scriptsDir .. "/WallpaperDaemon.sh",
   "$HOME/.config/hypr/initial-boot.sh",
-  "sh -c \"sleep 2; " .. scriptsDir .. "/WallpaperDaemon.sh\"",
   "dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP",
   "systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP",
   scriptsDir .. "/Polkit.sh",

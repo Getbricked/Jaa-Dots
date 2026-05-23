@@ -34,7 +34,6 @@ effect="--transition-bezier .43,1.19,1,.4 --transition-fps 30 --transition-type 
 
 # Check if a marker file exists.
 if [ ! -f "$HOME/.config/hypr/.initial_startup_done" ]; then
-    sleep 1
     # Initialize wallust and wallpaper
 	if [ -f "$wallpaper" ]; then
 		wallust "${wallust_args[@]}" run -s "$wallpaper" > /dev/null 

@@ -203,7 +203,7 @@
 
 "custom/quit": {
     "format": "󰗼",
-    "on-click": "hyprctl dispatch exit",
+    "on-click": "$HOME/.config/hypr/scripts/Logout.sh",
     "tooltip": true,
 	"tooltip-format": "Left Click: Exit Hyprland",
 },
