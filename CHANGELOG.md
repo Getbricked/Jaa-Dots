@@ -4,6 +4,11 @@
 
 ## Fixed:
 
+- NixOS waybar issues:
+  - User waybar service enabled
+    - `install.sh` checks for and disables on install
+    - `Refresh.sh` now supports systemctl service as well
+      - On NixOS waybar startup is wrapped `Refresh.sh` handles that also
 - Parser for `UserConfigs` mistook border size 1 as as true/false value
 - `UserConfigs/user_decorations.lua` was not being imported correctly
 - My custom keybinds were included in defaults by mistake
