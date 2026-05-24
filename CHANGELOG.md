@@ -4,6 +4,7 @@
 
 ## Fixed:
 
+- Bad import path in `.config/waybar/style/ML4W/glass.css` file
 - Migration script didn't properly create the `system_settings.lua` file
 - Logout is NixOS.
   - Added fallback if hyprshutdown not installed or fails
@@ -96,12 +97,12 @@
 ## Added:
 
 - Waybar widget for layouts
-  - Shows current layout 
-    - `D` for `dwindle` 
+  - Shows current layout
+    - `D` for `dwindle`
     - `S` for `scrolling`
     - `M` for `Monocole` (Capital M)
     - `m` for `master` (lowercase m in a circle)
-  - Click on icon brings up menu to select layout 
+  - Click on icon brings up menu to select layout
 - Created helper lua modules for `UserConfigs` lua files
   - `user_keybinds_helper.lua`
   - `user_startup_helper.lua`
