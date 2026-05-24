@@ -4,6 +4,9 @@
 
 ## Fixed:
 
+- Added script `scripts/DisableWaybarService.sh`
+  - Some OS's / distros add a `waybar.service` to manage waybar
+  - This breaks theming and waybar restarts
 - `scripts/lib_copy.sh` wasn't preserving `UserConfigs` dir
 - Bad import path in `.config/waybar/style/ML4W/glass.css` file
 - Migration script didn't properly create the `system_settings.lua` file
