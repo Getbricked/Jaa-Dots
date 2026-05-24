@@ -388,9 +388,6 @@ restore_user_configs() {
   local log="$1"
   local express_mode="$2"
   local old_version="$3"
-  if [ "${RUN_MODE:-}" = "install" ]; then
-    return
-  fi
 
   local DIRPATH="$HOME/.config/hypr"
   local BACKUP_DIR
@@ -401,6 +398,15 @@ restore_user_configs() {
   if [ -z "$BACKUP_DIR" ]; then
     echo "${ERROR:-[ERROR]} - Backup directory name is empty. Exiting." 2>&1 | tee -a "$log"
     exit 1
+  fi
+
+  if [ "${RUN_MODE:-}" = "install" ]; then
+    if [ -d "$BACKUP_DIR_PATH" ]; then
+      echo "${NOTE:-[NOTE]} Preserving existing UserConfigs directory during install." 2>&1 | tee -a "$log"
+      rsync -a "$BACKUP_DIR_PATH/" "$DIRPATH/UserConfigs/" 2>&1 | tee -a "$log"
+      echo "${OK:-[OK]} - UserConfigs directory preserved." 2>&1 | tee -a "$log"
+    fi
+    return
   fi
 
   if [ -d "$BACKUP_DIR_PATH" ]; then

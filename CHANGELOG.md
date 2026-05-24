@@ -4,6 +4,7 @@
 
 ## Fixed:
 
+- `scripts/lib_copy.sh` wasn't preserving `UserConfigs` dir
 - Bad import path in `.config/waybar/style/ML4W/glass.css` file
 - Migration script didn't properly create the `system_settings.lua` file
 - Logout is NixOS.
