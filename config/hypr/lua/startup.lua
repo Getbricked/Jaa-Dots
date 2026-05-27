@@ -41,7 +41,7 @@ local startup_commands = {
   "nm-applet",
   "nm-tray",
   "swaync",
-  scriptsDir .. "/PortalHyprlandUbuntu.sh",
+  scriptsDir .. "/PortalHyprland.sh",
   "sh " .. scriptsDir .. "/WaybarStartup.sh",
   "qs -c overview",
   "hypridle",
