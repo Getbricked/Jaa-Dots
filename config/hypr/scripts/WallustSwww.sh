@@ -41,6 +41,12 @@ ensure_wallust_waybar_style() {
     fi
   done
 }
+reload_running_cava_colors() {
+  # CAVA supports SIGUSR2 to reload colors without full audio reinitialization.
+  if pgrep -x cava >/dev/null 2>&1; then
+    pkill -USR2 -x cava >/dev/null 2>&1 || true
+  fi
+}
 
 # Inputs and paths
 passed_path="${1:-}"
@@ -172,6 +178,7 @@ if ! wait_for_templates "$start_ts" "${wallust_targets[@]}"; then
   exit 1
 fi
 ensure_wallust_waybar_style
+reload_running_cava_colors
 
 # Normalize Rofi selection colors to a brighter accent and readable foreground
 rofi_colors="$HOME/.config/rofi/wallust/colors-rofi.rasi"

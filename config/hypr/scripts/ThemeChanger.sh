@@ -83,6 +83,12 @@ ensure_wallust_waybar_style() {
     fi
   done
 }
+reload_running_cava_colors() {
+  # CAVA supports SIGUSR2 to reload colors without full audio reinitialization.
+  if pgrep -x cava >/dev/null 2>&1; then
+    pkill -USR2 -x cava >/dev/null 2>&1 || true
+  fi
+}
 
 wallust_hypr_colors="$HOME/.config/hypr/wallust/wallust-hyprland.conf"
 extract_wallust_hex() {
@@ -222,6 +228,7 @@ if wallust "${wallust_args[@]}" theme -- "${choice}" >"$wallust_log" 2>&1; then
     hyprctl reload config-only >/dev/null 2>&1 || true
   fi
   ensure_wallust_waybar_style
+  reload_running_cava_colors
 
   # Refresh bars/menus after files are ready
   if [ -x "$HOME/.config/hypr/scripts/Refresh.sh" ]; then

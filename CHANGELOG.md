@@ -4,8 +4,9 @@
 
 ## Fixed:
 
+- `cava` colors reloaded dynamically with wallpaper change
 - Updated `initial-boot.sh` to set `prefer-dark `
-  - This will set flatpak apps to dark 
+  - This will set flatpak apps to dark
   - PortalHyprland now also has the ubuntu portal code
 - Added script `scripts/DisableWaybarService.sh`
   - Some OS's / distros add a `waybar.service` to manage waybar
