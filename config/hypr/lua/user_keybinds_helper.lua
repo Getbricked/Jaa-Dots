@@ -194,10 +194,11 @@ local function unbind(mods, key)
       local key_chord = chord(mods, key_variant)
       if not seen[key_chord] then
         seen[key_chord] = true
-        local ok = pcall(hl.unbind, mods, key_variant)
-        if not ok then
-          pcall(hl.unbind, key_chord)
-        end
+        -- Hyprland Lua APIs vary by build: some accept unbind("MOD + KEY"),
+        -- others unbind("MOD", "KEY"), and some no-op one form silently.
+        -- Call both forms to make unbind behavior deterministic.
+        pcall(hl.unbind, key_chord)
+        pcall(hl.unbind, mods, key_variant)
       end
     end
   end
