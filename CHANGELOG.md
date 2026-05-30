@@ -9,6 +9,7 @@
     - logout stopped working
     - Long delay 20s+ for logout when using SDDM
   - Duplicate keybinds
+  - layout persistance code failed
 - `cava` colors reloaded dynamically with wallpaper change
 - Updated `initial-boot.sh` to set `prefer-dark `
   - This will set flatpak apps to dark

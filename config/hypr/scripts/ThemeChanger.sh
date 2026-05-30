@@ -31,6 +31,35 @@ require rofi
 
 # notify-send is optional
 have_notify() { command -v notify-send >/dev/null 2>&1; }
+capture_current_layout() {
+  if command -v jq >/dev/null 2>&1; then
+    hyprctl -j getoption general:layout 2>/dev/null | jq -r '.str // empty'
+  else
+    hyprctl getoption general:layout 2>/dev/null | awk 'NR==1 {print $2}'
+  fi
+}
+restore_layout_after_reload() {
+  local layout="$1"
+  [ -n "$layout" ] || return 0
+
+  if [ -x "$HOME/.config/hypr/scripts/ChangeLayout.sh" ]; then
+    if "$HOME/.config/hypr/scripts/ChangeLayout.sh" --no-notify "$layout" >/dev/null 2>&1; then
+      return 0
+    fi
+  fi
+
+  hyprctl keyword general:layout "$layout" >/dev/null 2>&1 || true
+}
+reload_hypr_preserve_layout() {
+  command -v hyprctl >/dev/null 2>&1 || return 0
+
+  local active_layout
+  active_layout="$(capture_current_layout || true)"
+
+  hyprctl reload config-only >/dev/null 2>&1 || true
+  sleep 0.1
+  restore_layout_after_reload "$active_layout"
+}
 # Cache theme list to avoid slow re-enumeration on every invocation
 cache_dir="${XDG_CACHE_HOME:-$HOME/.cache}"
 theme_cache="${cache_dir}/wallust_theme_list.txt"
@@ -224,9 +253,7 @@ if wallust "${wallust_args[@]}" theme -- "${choice}" >"$wallust_log" 2>&1; then
     fi
   fi
 
-  if command -v hyprctl >/dev/null 2>&1; then
-    hyprctl reload config-only >/dev/null 2>&1 || true
-  fi
+  reload_hypr_preserve_layout
   ensure_wallust_waybar_style
   reload_running_cava_colors
 

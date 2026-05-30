@@ -19,6 +19,35 @@ fi
 have_notify() { command -v notify-send >/dev/null 2>&1; }
 wallust_log="${XDG_CACHE_HOME:-$HOME/.cache}/wallust/wallust-swww.log"
 mkdir -p "$(dirname "$wallust_log")"
+capture_current_layout() {
+  if command -v jq >/dev/null 2>&1; then
+    hyprctl -j getoption general:layout 2>/dev/null | jq -r '.str // empty'
+  else
+    hyprctl getoption general:layout 2>/dev/null | awk 'NR==1 {print $2}'
+  fi
+}
+restore_layout_after_reload() {
+  local layout="$1"
+  [ -n "$layout" ] || return 0
+
+  if [ -x "$HOME/.config/hypr/scripts/ChangeLayout.sh" ]; then
+    if "$HOME/.config/hypr/scripts/ChangeLayout.sh" --no-notify "$layout" >/dev/null 2>&1; then
+      return 0
+    fi
+  fi
+
+  hyprctl keyword general:layout "$layout" >/dev/null 2>&1 || true
+}
+reload_hypr_preserve_layout() {
+  command -v hyprctl >/dev/null 2>&1 || return 0
+
+  local active_layout
+  active_layout="$(capture_current_layout || true)"
+
+  hyprctl reload config-only >/dev/null 2>&1 || true
+  sleep 0.1
+  restore_layout_after_reload "$active_layout"
+}
 ensure_wallust_waybar_style() {
   local waybar_style="$HOME/.config/waybar/style.css"
   local colors_file="$HOME/.config/waybar/wallust/colors-waybar.css"
@@ -258,9 +287,7 @@ apply_hypr_gap_fallback() {
 }
 
 # Apply Hyprland updates immediately to avoid delayed border/gap changes.
-if command -v hyprctl >/dev/null 2>&1; then
-  hyprctl reload config-only >/dev/null 2>&1 || true
-fi
+reload_hypr_preserve_layout
 
 kitty_cfg="$HOME/.config/wallust/wallust-kitty.toml"
 if [ "${#wallust_kitty_args[@]}" -gt 0 ]; then

@@ -10,6 +10,7 @@
 notif="$HOME/.config/swaync/images/ja.png"
 
 layouts=(master dwindle scrolling monocle)
+quiet_mode=0
 
 get_layout() {
   hyprctl -j getoption general:layout | jq -r '.str'
@@ -50,7 +51,9 @@ set_layout() {
   local target="$1"
 
   if ! set_hypr_layout "$target"; then
-    notify-send -e -u critical -i "$notif" " Layout switch failed: $target"
+    if [[ "$quiet_mode" -eq 0 ]]; then
+      notify-send -e -u critical -i "$notif" " Layout switch failed: $target"
+    fi
     return 1
   fi
 
@@ -103,12 +106,21 @@ set_layout() {
   local actual
   actual="$(get_layout)"
   if [[ "$actual" == "$target" ]]; then
-    notify-send -e -u low -i "$notif" " ${actual^} Layout"
+    if [[ "$quiet_mode" -eq 0 ]]; then
+      notify-send -e -u low -i "$notif" " ${actual^} Layout"
+    fi
   else
-    notify-send -e -u critical -i "$notif" " Layout switch failed: still ${actual}"
+    if [[ "$quiet_mode" -eq 0 ]]; then
+      notify-send -e -u critical -i "$notif" " Layout switch failed: still ${actual}"
+    fi
     return 1
   fi
 }
+
+if [[ "${1:-}" == "--quiet" || "${1:-}" == "--no-notify" ]]; then
+  quiet_mode=1
+  shift
+fi
 
 current="$(get_layout)"
 arg="${1:-toggle}"
@@ -124,7 +136,7 @@ master|dwindle|scrolling|monocle)
   set_layout "$arg"
   ;;
 *)
-  echo "Usage: $(basename "$0") [toggle|next|init|master|dwindle|scrolling|monocle]" >&2
+  echo "Usage: $(basename "$0") [--quiet|--no-notify] [toggle|next|init|master|dwindle|scrolling|monocle]" >&2
   exit 1
   ;;
 esac
