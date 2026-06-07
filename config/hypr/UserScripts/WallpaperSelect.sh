@@ -60,19 +60,51 @@ icon_size=$(echo "scale=1; ($monitor_height * 3) / ($scale_factor * 150)" | bc)
 adjusted_icon_size=$(echo "$icon_size" | awk '{if ($1 < 15) $1 = 20; if ($1 > 25) $1 = 25; print $1}')
 rofi_override="element-icon{size:${adjusted_icon_size}%;}"
 
+# Save wallpapers of OTHER monitors before killing anything
+save_other_monitors_wallpapers() {
+  declare -gA other_monitors_wallpapers
+  local all_monitors=$(hyprctl monitors -j | jq -r '.[].name')
+  
+  for monitor in $all_monitors; do
+    if [[ "$monitor" != "$focused_monitor" ]]; then
+      local wallpaper_path=$("$WWW_CMD" query 2>/dev/null | grep "$monitor" | awk '{print $NF}')
+      if [[ -n "$wallpaper_path" && -f "$wallpaper_path" ]]; then
+        other_monitors_wallpapers["$monitor"]="$wallpaper_path"
+      fi
+    fi
+  done
+}
+
 # Kill existing wallpaper daemons for video on the FOCUSED monitor
 kill_wallpaper_for_video() {
-  "$WWW_CMD" kill 2>/dev/null
   pkill -f "mpvpaper.*$focused_monitor" 2>/dev/null
   pkill swaybg 2>/dev/null
-  pkill hyprpaper 2>/dev/null
 }
 
 # Kill existing wallpaper daemons for image
 kill_wallpaper_for_image() {
   pkill -f "mpvpaper.*$focused_monitor" 2>/dev/null
   pkill swaybg 2>/dev/null
-  pkill hyprpaper 2>/dev/null
+}
+
+# Restore wallpapers for OTHER monitors
+restore_other_monitors_wallpapers() {
+  if ! pgrep -x "$WWW_DAEMON" >/dev/null; then
+    echo "Starting $WWW_DAEMON..."
+    "$WWW_DAEMON" "${WWW_DAEMON_ARGS[@]}" &
+    # Wait for daemon to be ready
+    for _ in {1..20}; do
+      "$WWW_CMD" query >/dev/null 2>&1 && break
+      sleep 0.1
+    done
+  fi
+
+  for monitor in "${!other_monitors_wallpapers[@]}"; do
+    local wallpaper_path="${other_monitors_wallpapers[$monitor]}"
+    if [[ -f "$wallpaper_path" ]]; then
+      "$WWW_CMD" img -o "$monitor" "$wallpaper_path" $SWWW_PARAMS || true
+    fi
+  done
 }
 
 # Retrieve wallpapers (both images & videos)
@@ -200,10 +232,18 @@ apply_video_wallpaper() {
     notify-send -i "$iDIR/error.png" "E-R-R-O-R" "mpvpaper not found"
     return 1
   fi
+
+  # Save other monitors' wallpapers before killing anything
+  save_other_monitors_wallpapers
+  
   kill_wallpaper_for_video
 
   # Apply video wallpaper ONLY to the focused monitor
   mpvpaper "$focused_monitor" -o "load-scripts=no no-audio --loop" "$video_path" &
+  
+  # Restore wallpapers for other monitors
+  sleep 1
+  restore_other_monitors_wallpapers
 }
 
 # Main function
