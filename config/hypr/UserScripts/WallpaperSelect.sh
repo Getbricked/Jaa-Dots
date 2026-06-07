@@ -27,9 +27,9 @@ TYPE="any"
 DURATION=2
 BEZIER=".43,1.19,1,.4"
 if [[ "$WWW_CMD" == "swww" || "$WWW_CMD" == "awww" ]]; then
-  SWWW_PARAMS=(--transition-fps "$FPS" --transition-type "$TYPE" --transition-duration "$DURATION" --transition-bezier "$BEZIER")
+  SWWW_PARAMS="--transition-fps $FPS --transition-type $TYPE --transition-duration $DURATION --transition-bezier $BEZIER"
 else
-  SWWW_PARAMS=()
+  SWWW_PARAMS=""
 fi
 
 
@@ -60,17 +60,17 @@ icon_size=$(echo "scale=1; ($monitor_height * 3) / ($scale_factor * 150)" | bc)
 adjusted_icon_size=$(echo "$icon_size" | awk '{if ($1 < 15) $1 = 20; if ($1 > 25) $1 = 25; print $1}')
 rofi_override="element-icon{size:${adjusted_icon_size}%;}"
 
-# Kill existing wallpaper daemons for video
+# Kill existing wallpaper daemons for video on the FOCUSED monitor
 kill_wallpaper_for_video() {
   "$WWW_CMD" kill 2>/dev/null
-  pkill mpvpaper 2>/dev/null
+  pkill -f "mpvpaper.*$focused_monitor" 2>/dev/null
   pkill swaybg 2>/dev/null
   pkill hyprpaper 2>/dev/null
 }
 
 # Kill existing wallpaper daemons for image
 kill_wallpaper_for_image() {
-  pkill mpvpaper 2>/dev/null
+  pkill -f "mpvpaper.*$focused_monitor" 2>/dev/null
   pkill swaybg 2>/dev/null
   pkill hyprpaper 2>/dev/null
 }
@@ -173,13 +173,11 @@ apply_image_wallpaper() {
     "$WWW_CMD" query >/dev/null 2>&1 && break
     sleep 0.1
   done
-  local resize_mode
-  resize_mode="$(wallpaper_resize_mode "$image_path" "$focused_monitor")"
-  "$WWW_CMD" img -o "$focused_monitor" --resize "$resize_mode" "$image_path" "${SWWW_PARAMS[@]}" || {
+  "$WWW_CMD" img -o "$focused_monitor" "$image_path" $SWWW_PARAMS || {
     sleep 0.2
-    "$WWW_CMD" img -o "$focused_monitor" --resize "$resize_mode" "$image_path" "${SWWW_PARAMS[@]}"
+    "$WWW_CMD" img -o "$focused_monitor" "$image_path" $SWWW_PARAMS
   }
-  "$WWW_CMD" img -o "$focused_monitor" --resize "$resize_mode" "$image_path" "${SWWW_PARAMS[@]}"
+  "$WWW_CMD" img -o "$focused_monitor" "$image_path" $SWWW_PARAMS
 
   # Persist per-monitor wallpaper selection
   mkdir -p "$(dirname "$per_monitor_wallpaper_current")" "$(dirname "$per_monitor_wallpaper_link")"
@@ -187,13 +185,10 @@ apply_image_wallpaper() {
   cp -f "$image_path" "$per_monitor_wallpaper_current" || true
 
   # Run additional scripts (pass the image path to avoid cache race conditions)
-  if ! "$SCRIPTSDIR/WallustSwww.sh" "$image_path"; then
-    notify-send -i "$iDIR/error.png" "Wallust failed" "Wallpaper theme not refreshed"
-    return 1
-  fi
-  sleep 0.5
+  "$SCRIPTSDIR/WallustSwww.sh" "$image_path"
+  sleep 2
   "$SCRIPTSDIR/Refresh.sh"
-  sleep 0.3
+  sleep 1
 
 }
 
@@ -207,8 +202,8 @@ apply_video_wallpaper() {
   fi
   kill_wallpaper_for_video
 
-  # Apply video wallpaper using mpvpaper
-  mpvpaper '*' -o "load-scripts=no no-audio --loop" "$video_path" &
+  # Apply video wallpaper ONLY to the focused monitor
+  mpvpaper "$focused_monitor" -o "load-scripts=no no-audio --loop" "$video_path" &
 }
 
 # Main function
